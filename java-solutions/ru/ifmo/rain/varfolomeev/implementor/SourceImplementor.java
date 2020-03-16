@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  *
  * @author Alexander Varfolomeev
  */
-class Implementor {
+class SourceImplementor {
     /**
      * Line separator in the current file system.
      */
@@ -116,10 +116,10 @@ class Implementor {
         @Override
         public boolean equals(Object object) {
             if (this == object) return true;
-            if (!(object instanceof Implementor.MethodWrapper)) {
+            if (!(object instanceof SourceImplementor.MethodWrapper)) {
                 return false;
             }
-            Implementor.MethodWrapper other = (Implementor.MethodWrapper) object;
+            SourceImplementor.MethodWrapper other = (SourceImplementor.MethodWrapper) object;
 
             return method.getName().equals(other.method.getName())
                     && method.getReturnType().equals(other.method.getReturnType())
@@ -190,7 +190,7 @@ class Implementor {
      * @throws ImplerException if <var>token</var> and <var>root</var> doesn't pass the validation
      * @see #validateInput(Class, Path)
      */
-    Implementor(Class<?> token, Path root) throws ImplerException {
+    SourceImplementor(Class<?> token, Path root) throws ImplerException {
         validateInput(token, root);
         this.token = token;
         this.javaPath = getFullPath(token, root, JAVA_EXTENSION);
@@ -285,10 +285,12 @@ class Implementor {
                 "class" +
                 SPACE +
                 getClassName(token) +
+                getTypeVariables(token.getTypeParameters()) +
                 SPACE +
                 (token.isInterface() ? "implements" : "extends") +
                 SPACE +
                 token.getCanonicalName() +
+                getTypeVariables(token.getTypeParameters()) +
                 SPACE +
                 OPENING_BRACKET +
                 LINE_SEPARATOR;
@@ -328,11 +330,11 @@ class Implementor {
      * @return implemented methods
      */
     private String implementMethods() {
-        Set<Implementor.MethodWrapper> methods = new HashSet<>();
+        Set<SourceImplementor.MethodWrapper> methods = new HashSet<>();
         getMethods(token, methods);
         return methods
                 .stream()
-                .map(Implementor.MethodWrapper::getMethod)
+                .map(SourceImplementor.MethodWrapper::getMethod)
                 .filter(method -> Modifier.isAbstract(method.getModifiers()) && !method.isDefault())
                 .map(this::getExecutable)
                 .collect(Collectors.joining(LINE_SEPARATOR));
@@ -344,9 +346,9 @@ class Implementor {
      * @param superToken superclass of {@link #token}
      * @param methods    {@link Set} of {@link #token} methods
      */
-    private void getMethods(Class<?> superToken, Set<Implementor.MethodWrapper> methods) {
+    private void getMethods(Class<?> superToken, Set<SourceImplementor.MethodWrapper> methods) {
         if (superToken == null) return;
-        Arrays.stream(superToken.getDeclaredMethods()).map(Implementor.MethodWrapper::new).collect(Collectors.toCollection(() -> methods));
+        Arrays.stream(superToken.getDeclaredMethods()).map(SourceImplementor.MethodWrapper::new).collect(Collectors.toCollection(() -> methods));
         getMethods(superToken.getSuperclass(), methods);
         for (Class<?> tokenInterface : superToken.getInterfaces()) {
             getMethods(tokenInterface, methods);
@@ -395,7 +397,7 @@ class Implementor {
                 .append(TAB)
                 .append(getModifiers(executable))
                 .append(SPACE)
-                .append(getTypeVariables(executable))
+                .append(getTypeVariables(executable.getTypeParameters()))
                 .append(executableName)
                 .append(getParameters(executable, true))
                 .append(SPACE)
@@ -433,14 +435,13 @@ class Implementor {
     /**
      * Returns {@link String} representation of type variables of implemented <var>executable</var>.
      *
-     * @param executable {@link Executable} to implement
+     * @param typeParameters array of {@link TypeVariable} which the string representation is returned
      * @return type variables
      */
-    private String getTypeVariables(Executable executable) {
-        TypeVariable<?>[] typeParameters = executable.getTypeParameters();
+    private String getTypeVariables(TypeVariable<?>[] typeParameters) {
         return typeParameters.length == 0 ? EMPTY_STRING :
                 Arrays.stream(typeParameters)
-                        .map(Implementor::typeVarBounds)
+                        .map(SourceImplementor::typeVarBounds)
                         .collect(Collectors.joining(", ", "<", "> "));
     }
 
@@ -515,7 +516,7 @@ class Implementor {
     }
 
     /**
-     * Validation of {@link #Implementor(Class, Path)} arguments.
+     * Validation of {@link #SourceImplementor(Class, Path)} arguments.
      *
      * @param token type token to validate
      * @param root  root directory to validate

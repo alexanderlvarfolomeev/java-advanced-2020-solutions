@@ -1,5 +1,7 @@
-javac -d _build -p .;artifacts;lib; --module-source-path . -m "ru.ifmo.rain.varfolomeev.implementor"
+set src_folder="../../../../.."
 
-jar -c -f _implementor.jar -e ru/ifmo/rain/varfolomeev/implementor/JarImplementor --module-version 1.0 -C _build\ru.ifmo.rain.varfolomeev.implementor .
+javac -d _build -p %src_folder% -sourcepath %src_folder% JarImplementor.java
 
-rmdir _build /s /q
+jar -c -f _implementor.jar -e ru/ifmo/rain/varfolomeev/implementor/JarImplementor -C _build .
+
+Rem rmdir _build /s /q
