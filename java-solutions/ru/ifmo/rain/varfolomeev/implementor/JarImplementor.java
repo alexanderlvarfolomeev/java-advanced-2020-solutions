@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.function.BiConsumer;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
@@ -94,10 +95,13 @@ public class JarImplementor extends Implementor implements JarImpler {
         SourceImplementor.validate(args == null || args.length != 2 && !(args.length == 3 && "-jar".equals(args[0])),
                 "Usage: java Implementor <classname> <output directory> or java Implementor -jar <classname> <output jarfile>");
         try {
+            Class<?> token = Class.forName(args[args.length - 2]);
+            Path path = Path.of(args[args.length - 1]);
+            JarImpler implementor = new JarImplementor();
             if (args.length == 2) {
-                new JarImplementor().implement(Class.forName(args[0]), Path.of(args[1]));
+                implementor.implement(token, path);
             } else {
-                new JarImplementor().implementJar(Class.forName(args[1]), Path.of(args[2]));
+                implementor.implementJar(token, path);
             }
         } catch (ClassNotFoundException e) {
             throw new ImplerException("Class is not found", e);
