@@ -5,6 +5,7 @@ out
 scripts
 java-solutions/ru/ifmo/rain/varfolomeev/implementor/_javadoc
 java-solutions/info
+java-solutions/module-info.java
 java-solutions/ru/ifmo/rain/varfolomeev/implementor/_implementor.jar
 java-advanced-2020-solutions.iml
 java-solutions/ru/ifmo/rain/varfolomeev/implementor/build-jar-module.cmd
