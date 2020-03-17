@@ -1,7 +1,6 @@
 package ru.ifmo.rain.varfolomeev.concurrent;
 
 import info.kgeorgiy.java.advanced.concurrent.AdvancedIP;
-import info.kgeorgiy.java.advanced.concurrent.ListIP;
 
 import java.util.*;
 import java.util.function.Function;
