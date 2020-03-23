@@ -5,7 +5,6 @@ import info.kgeorgiy.java.advanced.implementor.ImplerException;
 
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.Arrays;
 
 /**
  * Implementation of {@link Impler} interface.
