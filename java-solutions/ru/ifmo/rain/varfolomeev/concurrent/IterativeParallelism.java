@@ -189,25 +189,12 @@ public class IterativeParallelism implements AdvancedIP {
     private <R, S, T> S parallelFunction(int threadCount,
                                          final List<T> values, Function<? super Stream<T>, R> mapper,
                                          Function<? super Stream<R>, S> finisher) throws InterruptedException {
-//        long t = System.nanoTime();
-//        if (parallelMapper!= null && values.size() > 1) {
-//            final int ops = 20 - ((ParallelMapperImpl)parallelMapper).getThreadCount();
-//            List<T> list = List.of(values.get(0), values.get(1));
-//            for (int i = 0; i < ops; i++) {
-//                R el = mapper.apply(list.stream());
-//            }
-//        }
         checkThreads(threadCount);
         threadCount = Math.min(threadCount, values.size());
         List<Stream<T>> streams = getSubStreams(threadCount, values);
         List<R> results = parallelMapper == null ?
                 evaluateResults(threadCount, streams, mapper) : parallelMapper.map(mapper, streams);
-//        try {
         return finisher.apply(results.stream());
-//        } finally {
-//
-//            System.out.println((System.nanoTime() - t)/1e6);
-//        }
     }
 
     private <T, R> List<R> evaluateResults(final int threadCount, List<Stream<T>> streams,
