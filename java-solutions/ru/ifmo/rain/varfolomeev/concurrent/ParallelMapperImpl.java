@@ -96,10 +96,6 @@ public class ParallelMapperImpl implements ParallelMapper {
         return resultCollector.getResult();
     }
 
-    int getThreadCount() {
-        return threads.size();
-    }
-
     /**
      * Stops all threads. All unfinished mappings leave in undefined state.
      */
