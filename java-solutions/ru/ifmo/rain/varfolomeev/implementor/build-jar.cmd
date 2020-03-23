@@ -1,4 +1,5 @@
-set src_folder=%~dp0..\..\..\..\..
+set script_folder=%~dp0
+set src_folder=%script_folder%..\..\..\..\..
 set modules_folder=%src_folder%\..\..\java-advanced-2020\modules
 set source_package=%modules_folder%\info.kgeorgiy.java.advanced.implementor\info\kgeorgiy\java\advanced\implementor
 set source_files=%source_package%\Impler.java %source_package%\JarImpler.java %source_package%\ImplerException.java
