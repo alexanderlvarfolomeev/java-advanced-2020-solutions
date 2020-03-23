@@ -286,7 +286,6 @@ class SourceImplementor {
                 SPACE +
                 getClassName(token) +
                 getTypeVariables(token.getTypeParameters()) +
-                SPACE +
                 (token.isInterface() ? "implements" : "extends") +
                 SPACE +
                 token.getCanonicalName() +
@@ -439,7 +438,7 @@ class SourceImplementor {
      * @return type variables
      */
     private String getTypeVariables(TypeVariable<?>[] typeParameters) {
-        return typeParameters.length == 0 ? EMPTY_STRING :
+        return typeParameters.length == 0 ? SPACE:
                 Arrays.stream(typeParameters)
                         .map(SourceImplementor::typeVarBounds)
                         .collect(Collectors.joining(", ", "<", "> "));

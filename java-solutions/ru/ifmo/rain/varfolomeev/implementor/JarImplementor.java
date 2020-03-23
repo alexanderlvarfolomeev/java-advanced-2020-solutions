@@ -57,18 +57,21 @@ public class JarImplementor extends Implementor implements JarImpler {
         try {
             args = new String[]{
                     "-cp",
-                    tempDirectory.toString() + File.pathSeparator + Path.of(token.getProtectionDomain().getCodeSource().getLocation().toURI()).toString(),
+                    tempDirectory.toString() + File.pathSeparator +
+                            Path.of(token.getProtectionDomain().getCodeSource().getLocation().toURI()).toString(),
                     SourceImplementor.getFullPath(token, tempDirectory, SourceImplementor.JAVA_EXTENSION).toString()
             };
         } catch (URISyntaxException e) {
             throw new ImplerException(e);
         }
         SourceImplementor.validate(compiler == null, "Could not find java compiler");
-        SourceImplementor.validate(compiler.run(null, null, null, args) != 0, "Can't compile java file: " + Arrays.toString(args));
+        SourceImplementor.validate(compiler.run(null, null, null, args) != 0,
+                "Can't compile java file: " + Arrays.toString(args));
         Manifest manifest = new Manifest();
         manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
         try (JarOutputStream outputStream = new JarOutputStream(Files.newOutputStream(jarFile), manifest)) {
-            outputStream.putNextEntry(new ZipEntry(SourceImplementor.getFullPath(token, Path.of(""), SourceImplementor.CLASS_EXTENSION).toString().replace('\\', '/')));
+            outputStream.putNextEntry(new ZipEntry(SourceImplementor.getFullPath(token, Path.of(""),
+                    SourceImplementor.CLASS_EXTENSION).toString().replace('\\', '/')));
             Files.copy(SourceImplementor.getFullPath(token, tempDirectory, SourceImplementor.CLASS_EXTENSION), outputStream);
         } catch (IOException e) {
             throw new ImplerException("Can't write to jar file", e);
