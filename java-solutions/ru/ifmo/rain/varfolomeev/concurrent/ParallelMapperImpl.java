@@ -65,15 +65,18 @@ public class ParallelMapperImpl implements ParallelMapper {
                 tasks.wait();
             }
             task = tasks.poll();
-            tasks.notify();
+            tasks.notifyAll();
         }
         task.run();
     }
 
-    void produce(Runnable task) {
+    void produce(Runnable task) throws InterruptedException {
         synchronized (tasks) {
+            while (tasks.size() == 1e6) {
+                tasks.wait();
+            }
             tasks.add(task);
-            tasks.notify();
+            tasks.notifyAll();
         }
     }
 
