@@ -31,14 +31,14 @@ public class JarImplementor extends Implementor implements JarImpler {
         /**
          * Creates {@link DeleterFileVisitor} instance
          */
-        DeleterFileVisitor(){
+        DeleterFileVisitor() {
             super();
         }
 
         /**
          * Deletes current file
          *
-         * @param file current file
+         * @param file  current file
          * @param attrs attributes of file
          * @return {@link FileVisitResult#CONTINUE}
          * @throws IOException if error occurred during file deletion
@@ -54,7 +54,7 @@ public class JarImplementor extends Implementor implements JarImpler {
          *
          * @param dir current directory
          * @param exc {@code null} if there were no errors during directory iteration
-         *           otherwise the I/O exception that were thrown during iteration
+         *            otherwise the I/O exception that were thrown during iteration
          * @return {@link FileVisitResult#CONTINUE}
          * @throws IOException if error occurred during directory deletion
          */
@@ -92,7 +92,6 @@ public class JarImplementor extends Implementor implements JarImpler {
             throw new ImplerException("Can't create temp directory", e);
         }
         try {
-            tempDirectory.toFile().deleteOnExit();
             implement(token, tempDirectory);
             final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             String[] args;
