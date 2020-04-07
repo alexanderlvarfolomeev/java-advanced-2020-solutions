@@ -26,7 +26,7 @@ public class WebCrawler implements Crawler {
             this.queue = new LinkedBlockingQueue<>();
         }
 
-        synchronized void extractLinks(Document document) throws IOException {
+        void extractLinks(Document document) throws IOException {
             document.extractLinks().stream().filter(passed::add).forEach(queue::add);
         }
 
