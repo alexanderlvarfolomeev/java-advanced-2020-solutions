@@ -15,7 +15,7 @@ public class WebCrawler implements Crawler {
     private final ExecutorService downloadersExecutor;
     private final ExecutorService extractorsExecutor;
     private final int perHost;
-    ConcurrentMap<String, Host> hosts;
+    private final ConcurrentMap<String, Host> hosts;
 
     private static class LinkExtractor {
         private final Set<String> passed;
