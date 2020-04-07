@@ -16,22 +16,23 @@ public class ParallelMapperImpl implements ParallelMapper {
 
     private static class ResultCollector<R> {
         private final List<R> result;
-        private AtomicInteger counter;
+        private int counter;
 
         ResultCollector(int size) {
             result = new ArrayList<>(Collections.nCopies(size, null));
-            counter = new AtomicInteger();
+            counter = 0;
         }
 
         synchronized void set(int index, R element) {
             result.set(index, element);
-            if (counter.incrementAndGet() == result.size()) {
+            ++counter;
+            if (counter == result.size()) {
                 notify();
             }
         }
 
         synchronized List<R> getResult() throws InterruptedException {
-            while (counter.get() < result.size()) {
+            while (counter < result.size()) {
                 wait();
             }
             return result;
