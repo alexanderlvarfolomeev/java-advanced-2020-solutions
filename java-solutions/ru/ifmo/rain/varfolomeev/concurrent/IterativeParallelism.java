@@ -29,7 +29,8 @@ public class IterativeParallelism implements AdvancedIP {
     }
 
     @Override
-    public <T> T maximum(int threadCount, List<? extends T> values, Comparator<? super T> comparator) throws InterruptedException {
+    public <T> T maximum(int threadCount, List<? extends T> values,
+                         Comparator<? super T> comparator) throws InterruptedException {
         if (values.isEmpty()) {
             throw new NoSuchElementException("'values' is empty list");
         }
@@ -38,12 +39,14 @@ public class IterativeParallelism implements AdvancedIP {
     }
 
     @Override
-    public <T> T minimum(int threadCount, List<? extends T> values, Comparator<? super T> comparator) throws InterruptedException {
+    public <T> T minimum(int threadCount, List<? extends T> values,
+                         Comparator<? super T> comparator) throws InterruptedException {
         return maximum(threadCount, values, comparator.reversed());
     }
 
     @Override
-    public <T> boolean all(int threadCount, List<? extends T> values, Predicate<? super T> predicate) throws InterruptedException {
+    public <T> boolean all(int threadCount, List<? extends T> values,
+                           Predicate<? super T> predicate) throws InterruptedException {
         return parallelMap(
                 threadCount, values,
                 stream -> stream.allMatch(predicate),
@@ -52,7 +55,8 @@ public class IterativeParallelism implements AdvancedIP {
     }
 
     @Override
-    public <T> boolean any(int threadCount, List<? extends T> values, Predicate<? super T> predicate) throws InterruptedException {
+    public <T> boolean any(int threadCount, List<? extends T> values,
+                           Predicate<? super T> predicate) throws InterruptedException {
         return !all(threadCount, values, predicate.negate());
     }
 
@@ -66,7 +70,8 @@ public class IterativeParallelism implements AdvancedIP {
     }
 
     @Override
-    public <T> List<T> filter(final int threadCount, final List<? extends T> values, final Predicate<? super T> predicate) throws InterruptedException {
+    public <T> List<T> filter(final int threadCount, final List<? extends T> values,
+                              final Predicate<? super T> predicate) throws InterruptedException {
         return parallelMap(
                 threadCount, values,
                 stream -> stream.filter(predicate).collect(Collectors.toList()),
@@ -75,7 +80,8 @@ public class IterativeParallelism implements AdvancedIP {
     }
 
     @Override
-    public <T, U> List<U> map(final int threadCount, final List<? extends T> values, final Function<? super T, ? extends U> f) throws InterruptedException {
+    public <T, U> List<U> map(final int threadCount, final List<? extends T> values,
+                              final Function<? super T, ? extends U> f) throws InterruptedException {
         return parallelMap(
                 threadCount, values,
                 stream -> stream.map(f).collect(Collectors.toList()),
@@ -90,7 +96,8 @@ public class IterativeParallelism implements AdvancedIP {
     }
 
     @Override
-    public <T, R> R mapReduce(final int threadCount, final List<T> values, final Function<T, R> lift, final Monoid<R> monoid) throws InterruptedException {
+    public <T, R> R mapReduce(final int threadCount, final List<T> values,
+                              final Function<T, R> lift, final Monoid<R> monoid) throws InterruptedException {
         return reduce(threadCount, map(threadCount, values, lift), monoid);
     }
 
@@ -145,7 +152,8 @@ public class IterativeParallelism implements AdvancedIP {
         return (int) ((index * size) / threadCount);
     }
 
-    private <T, R> List<Thread> getThreads(int threadCount, final List<Stream<T>> streams, List<R> result, Function<? super Stream<T>, R> mapper) {
+    private <T, R> List<Thread> getThreads(int threadCount, final List<Stream<T>> streams,
+                                           List<R> result, Function<? super Stream<T>, R> mapper) {
         List<Thread> threads = new ArrayList<>();
         for (int i = 0; i < threadCount; i++) {
             final int index = i;
