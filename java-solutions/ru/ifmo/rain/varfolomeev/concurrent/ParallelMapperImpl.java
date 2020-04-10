@@ -83,20 +83,20 @@ public class ParallelMapperImpl implements ParallelMapper {
     }
 
     /**
-     * Maps function {@code f} over specified {@code args}.
+     * Maps function {@code mapper} over specified {@code args}.
      * Mapping for each element performs in parallel.
      *
-     * @param f    mapper function.
-     * @param args values to map.
-     * @param <T>  value type.
-     * @param <R>  result type.
+     * @param mapper mapper function.
+     * @param args   values to map.
+     * @param <T>    value type.
+     * @param <R>    result type.
      * @throws InterruptedException if calling thread was interrupted
      */
-    public <T, R> List<R> map(Function<? super T, ? extends R> f, List<? extends T> args) throws InterruptedException {
+    public <T, R> List<R> map(Function<? super T, ? extends R> mapper, List<? extends T> args) throws InterruptedException {
         final ResultCollector<R> resultCollector = new ResultCollector<>(args.size());
         for (int i = 0; i < args.size(); i++) {
             final int index = i;
-            produce(() -> resultCollector.set(index, f.apply(args.get(index))));
+            produce(() -> resultCollector.set(index, mapper.apply(args.get(index))));
         }
         return resultCollector.getResult();
     }

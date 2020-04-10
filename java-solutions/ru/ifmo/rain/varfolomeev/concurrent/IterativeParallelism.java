@@ -96,7 +96,7 @@ public class IterativeParallelism implements AdvancedIP {
 
     private <R, S, T> S parallelFunction(int threadCount,
                                          final List<T> values, Function<? super Stream<T>, R> mapper,
-                                         Function<? super Stream<R>, S> finisher) throws InterruptedException {
+                                         Function<? super Stream<R>, S> reducer) throws InterruptedException {
         if (threadCount < 1) {
             throw new InterruptedException("Should be at least 1 thread");
         }
@@ -104,7 +104,7 @@ public class IterativeParallelism implements AdvancedIP {
         List<Stream<T>> streams = getSubStreams(threadCount, values);
         List<R> results = parallelMapper == null ?
                 evaluateResults(threadCount, streams, mapper) : parallelMapper.map(mapper, streams);
-        return finisher.apply(results.stream());
+        return reducer.apply(results.stream());
     }
 
     private <T, R> List<R> evaluateResults(final int threadCount, List<Stream<T>> streams,
