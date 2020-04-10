@@ -34,7 +34,7 @@ public class IterativeParallelism implements AdvancedIP {
             throw new NoSuchElementException("'values' is empty list");
         }
         Function<Stream<? extends T>, T> function = stream -> stream.max(comparator).orElse(null);
-        return parallelFunction(threadCount, values, function, function);
+        return parallelMap(threadCount, values, function, function);
     }
 
     @Override
@@ -44,7 +44,7 @@ public class IterativeParallelism implements AdvancedIP {
 
     @Override
     public <T> boolean all(int threadCount, List<? extends T> values, Predicate<? super T> predicate) throws InterruptedException {
-        return parallelFunction(
+        return parallelMap(
                 threadCount, values,
                 stream -> stream.allMatch(predicate),
                 stream -> stream.allMatch(Boolean::booleanValue)
@@ -58,7 +58,7 @@ public class IterativeParallelism implements AdvancedIP {
 
     @Override
     public String join(int threadCount, List<?> values) throws InterruptedException {
-        return parallelFunction(
+        return parallelMap(
                 threadCount, values,
                 stream -> stream.map(Object::toString).collect(Collectors.joining()),
                 stream -> stream.collect(Collectors.joining())
@@ -67,7 +67,7 @@ public class IterativeParallelism implements AdvancedIP {
 
     @Override
     public <T> List<T> filter(final int threadCount, final List<? extends T> values, final Predicate<? super T> predicate) throws InterruptedException {
-        return parallelFunction(
+        return parallelMap(
                 threadCount, values,
                 stream -> stream.filter(predicate).collect(Collectors.toList()),
                 stream -> stream.flatMap(Collection::stream).collect(Collectors.toList())
@@ -76,7 +76,7 @@ public class IterativeParallelism implements AdvancedIP {
 
     @Override
     public <T, U> List<U> map(final int threadCount, final List<? extends T> values, final Function<? super T, ? extends U> f) throws InterruptedException {
-        return parallelFunction(
+        return parallelMap(
                 threadCount, values,
                 stream -> stream.map(f).collect(Collectors.toList()),
                 stream -> stream.flatMap(Collection::stream).collect(Collectors.toList())
@@ -86,7 +86,7 @@ public class IterativeParallelism implements AdvancedIP {
     @Override
     public <T> T reduce(final int threadCount, List<T> values, final Monoid<T> monoid) throws InterruptedException {
         Function<Stream<T>, T> function = stream -> stream.reduce(monoid.getIdentity(), monoid.getOperator());
-        return parallelFunction(threadCount, values, function, function);
+        return parallelMap(threadCount, values, function, function);
     }
 
     @Override
@@ -94,9 +94,9 @@ public class IterativeParallelism implements AdvancedIP {
         return reduce(threadCount, map(threadCount, values, lift), monoid);
     }
 
-    private <R, S, T> S parallelFunction(int threadCount,
-                                         final List<T> values, Function<? super Stream<T>, R> mapper,
-                                         Function<? super Stream<R>, S> reducer) throws InterruptedException {
+    private <R, S, T> S parallelMap(int threadCount,
+                                    final List<T> values, Function<? super Stream<T>, R> mapper,
+                                    Function<? super Stream<R>, S> reducer) throws InterruptedException {
         if (threadCount < 1) {
             throw new InterruptedException("Should be at least 1 thread");
         }
