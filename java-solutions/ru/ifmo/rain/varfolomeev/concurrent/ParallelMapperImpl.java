@@ -60,7 +60,7 @@ public class ParallelMapperImpl implements ParallelMapper {
         }
     }
 
-    void consume() throws InterruptedException {
+    private void consume() throws InterruptedException {
         Runnable task;
         synchronized (tasks) {
             while (tasks.isEmpty()) {
@@ -72,7 +72,7 @@ public class ParallelMapperImpl implements ParallelMapper {
         task.run();
     }
 
-    void produce(Runnable task) throws InterruptedException {
+    private void produce(Runnable task) throws InterruptedException {
         synchronized (tasks) {
             while (tasks.size() == QUEUE_MAX_SIZE) {
                 tasks.wait();
