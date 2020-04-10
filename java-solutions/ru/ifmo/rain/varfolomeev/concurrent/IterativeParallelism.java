@@ -114,8 +114,18 @@ public class IterativeParallelism implements AdvancedIP {
         for (Thread thread : threads) {
             thread.start();
         }
+        List<InterruptedException> exceptions = new ArrayList<>();
         for (Thread thread : threads) {
-            thread.join();
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                exceptions.add(e);
+            }
+        }
+        if (!exceptions.isEmpty()) {
+            InterruptedException exception = exceptions.get(0);
+            exceptions.stream().skip(1).forEach(exception::addSuppressed);
+            throw exception;
         }
         return results;
     }
