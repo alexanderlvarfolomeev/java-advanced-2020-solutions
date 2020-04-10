@@ -22,7 +22,7 @@ public class ParallelMapperImpl implements ParallelMapper {
             counter = 0;
         }
 
-        synchronized void set(int index, R element) {
+        private synchronized void set(int index, R element) {
             result.set(index, element);
             ++counter;
             if (counter == result.size()) {
@@ -30,7 +30,7 @@ public class ParallelMapperImpl implements ParallelMapper {
             }
         }
 
-        synchronized List<R> getResult() throws InterruptedException {
+        private synchronized List<R> getResult() throws InterruptedException {
             while (counter < result.size()) {
                 wait();
             }
