@@ -51,8 +51,6 @@ public class ParallelMapperImpl implements ParallelMapper {
                     consume();
                 }
             } catch (InterruptedException ignore) {
-            } finally {
-                Thread.currentThread().interrupt();
             }
         })).limit(threadCount).collect(Collectors.toList());
         for (Thread thread : threads) {
