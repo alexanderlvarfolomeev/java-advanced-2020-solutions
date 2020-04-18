@@ -78,11 +78,28 @@ public class ParallelMapperImpl implements ParallelMapper {
 
     public <T, R> List<R> map(Function<? super T, ? extends R> mapper, List<? extends T> args) throws InterruptedException {
         final ListWrapper<R> listWrapper = new ListWrapper<>(args.size());
+        RuntimeException[] exception = new RuntimeException[]{null};
         for (int i = 0; i < args.size(); i++) {
             final int index = i;
-            produce(() -> listWrapper.set(index, mapper.apply(args.get(index))));
+            produce(() -> {
+                try {
+                    R result = mapper.apply(args.get(index));
+                    listWrapper.set(index, result);
+                } catch (RuntimeException e) {
+                    synchronized (exception) {
+                        if (exception[0] == null) {
+                            exception[0] = e;
+                        }
+                    }
+                }
+            });
         }
-        return listWrapper.getResult();
+
+        if (exception[0] == null) {
+            return listWrapper.getResult();
+        } else {
+            throw exception[0];
+        }
     }
 
     @Override
