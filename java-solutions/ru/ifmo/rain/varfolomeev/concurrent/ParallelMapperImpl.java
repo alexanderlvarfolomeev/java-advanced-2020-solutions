@@ -24,7 +24,7 @@ public class ParallelMapperImpl implements ParallelMapper {
 
         private synchronized void set(int index, R element) {
             result.set(index, element);
-            ++counter;
+            counter++;
             if (counter == result.size()) {
                 notify();
             }
