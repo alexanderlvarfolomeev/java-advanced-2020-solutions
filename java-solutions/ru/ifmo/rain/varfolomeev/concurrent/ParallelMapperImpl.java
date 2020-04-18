@@ -95,9 +95,9 @@ public class ParallelMapperImpl implements ParallelMapper {
                 }
             });
         }
-
+        List<R> result = listWrapper.getResult();
         if (exception[0] == null) {
-            return listWrapper.getResult();
+            return result;
         } else {
             throw exception[0];
         }
