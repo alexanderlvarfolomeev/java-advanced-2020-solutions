@@ -13,11 +13,11 @@ public class ParallelMapperImpl implements ParallelMapper {
     private final Queue<Runnable> tasks;
     private final List<Thread> threads;
 
-    private static class ResultCollector<R> {
+    private static class ListWrapper<R> {
         private final List<R> result;
         private int counter;
 
-        ResultCollector(int size) {
+        private ListWrapper(int size) {
             result = new ArrayList<>(Collections.nCopies(size, null));
             counter = 0;
         }
@@ -91,12 +91,12 @@ public class ParallelMapperImpl implements ParallelMapper {
      * @throws InterruptedException if calling thread was interrupted
      */
     public <T, R> List<R> map(Function<? super T, ? extends R> mapper, List<? extends T> args) throws InterruptedException {
-        final ResultCollector<R> resultCollector = new ResultCollector<>(args.size());
+        final ListWrapper<R> listWrapper = new ListWrapper<>(args.size());
         for (int i = 0; i < args.size(); i++) {
             final int index = i;
-            produce(() -> resultCollector.set(index, mapper.apply(args.get(index))));
+            produce(() -> listWrapper.set(index, mapper.apply(args.get(index))));
         }
-        return resultCollector.getResult();
+        return listWrapper.getResult();
     }
 
     /**
