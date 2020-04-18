@@ -8,8 +8,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ParallelMapperImpl implements ParallelMapper {
-    private static final int QUEUE_MAX_SIZE = 1_000_000;
-
     private final Queue<Runnable> tasks;
     private final List<Thread> threads;
 
@@ -66,18 +64,15 @@ public class ParallelMapperImpl implements ParallelMapper {
                 tasks.wait();
             }
             task = tasks.poll();
-            tasks.notifyAll();
+            tasks.notify();
         }
         task.run();
     }
 
-    private void produce(Runnable task) throws InterruptedException {
+    private void produce(Runnable task) {
         synchronized (tasks) {
-            while (tasks.size() == QUEUE_MAX_SIZE) {
-                tasks.wait();
-            }
             tasks.add(task);
-            tasks.notifyAll();
+            tasks.notify();
         }
     }
 
