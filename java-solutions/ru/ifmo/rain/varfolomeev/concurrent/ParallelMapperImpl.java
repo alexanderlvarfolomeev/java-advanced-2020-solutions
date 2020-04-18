@@ -53,9 +53,7 @@ public class ParallelMapperImpl implements ParallelMapper {
             } catch (InterruptedException ignore) {
             }
         })).limit(threadCount).collect(Collectors.toList());
-        for (Thread thread : threads) {
-            thread.start();
-        }
+        threads.forEach(Thread::start);
     }
 
     private void consume() throws InterruptedException {
@@ -80,16 +78,6 @@ public class ParallelMapperImpl implements ParallelMapper {
         }
     }
 
-    /**
-     * Maps function {@code mapper} over specified {@code args}.
-     * Mapping for each element performs in parallel.
-     *
-     * @param mapper mapper function.
-     * @param args   values to map.
-     * @param <T>    value type.
-     * @param <R>    result type.
-     * @throws InterruptedException if calling thread was interrupted
-     */
     public <T, R> List<R> map(Function<? super T, ? extends R> mapper, List<? extends T> args) throws InterruptedException {
         final ListWrapper<R> listWrapper = new ListWrapper<>(args.size());
         for (int i = 0; i < args.size(); i++) {
@@ -99,9 +87,6 @@ public class ParallelMapperImpl implements ParallelMapper {
         return listWrapper.getResult();
     }
 
-    /**
-     * Stops all threads. All unfinished mappings leave in undefined state.
-     */
     @Override
     public void close() {
         threads.forEach(Thread::interrupt);
