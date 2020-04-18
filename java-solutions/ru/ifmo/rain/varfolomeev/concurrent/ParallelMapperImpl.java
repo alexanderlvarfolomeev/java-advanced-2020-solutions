@@ -44,6 +44,9 @@ public class ParallelMapperImpl implements ParallelMapper {
      * @param threadCount threads count to create.
      */
     public ParallelMapperImpl(int threadCount) {
+        if (threadCount < 1) {
+            throw new IllegalArgumentException("Thread count must be positive");
+        }
         this.tasks = new LinkedList<>();
         this.threads = Stream.generate(() -> new Thread(() -> {
             try {
