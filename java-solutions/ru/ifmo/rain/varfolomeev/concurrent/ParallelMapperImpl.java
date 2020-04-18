@@ -84,7 +84,9 @@ public class ParallelMapperImpl implements ParallelMapper {
             produce(() -> {
                 try {
                     R result = mapper.apply(args.get(index));
-                    listWrapper.set(index, result);
+                    synchronized (listWrapper) {
+                        listWrapper.set(index, result);
+                    }
                 } catch (RuntimeException e) {
                     synchronized (exception) {
                         if (exception[0] == null) {
