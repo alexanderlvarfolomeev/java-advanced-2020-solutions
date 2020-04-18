@@ -20,7 +20,7 @@ public class ParallelMapperImpl implements ParallelMapper {
             counter = 0;
         }
 
-        private synchronized void set(int index, R element) {
+        private synchronized void setElement(int index, R element) {
             result.set(index, element);
             counter++;
             if (counter == result.size()) {
@@ -84,7 +84,7 @@ public class ParallelMapperImpl implements ParallelMapper {
                 try {
                     R result = mapper.apply(args.get(index));
                     synchronized (listWrapper) {
-                        listWrapper.set(index, result);
+                        listWrapper.setElement(index, result);
                     }
                 } catch (RuntimeException e) {
                     synchronized (exception) {
