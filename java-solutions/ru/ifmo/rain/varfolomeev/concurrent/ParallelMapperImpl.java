@@ -82,14 +82,13 @@ public class ParallelMapperImpl implements ParallelMapper {
             final int index = i;
             produce(() -> {
                 try {
-                    R result = mapper.apply(args.get(index));
-                    synchronized (listWrapper) {
-                        listWrapper.setElement(index, result);
-                    }
+                    listWrapper.setElement(index, mapper.apply(args.get(index)));
                 } catch (RuntimeException e) {
                     synchronized (exception) {
                         if (exception[0] == null) {
                             exception[0] = e;
+                        } else {
+                            exception[0].addSuppressed(e);
                         }
                     }
                 }
