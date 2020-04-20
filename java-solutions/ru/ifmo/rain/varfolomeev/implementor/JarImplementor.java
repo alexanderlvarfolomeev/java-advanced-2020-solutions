@@ -87,7 +87,7 @@ public class JarImplementor extends Implementor implements JarImpler {
         SourceImplementor.validate(jarFile == null, "jar file path can't be null");
         Path tempDirectory;
         try {
-            tempDirectory = Files.createTempDirectory("implementor_temp");
+            tempDirectory = Files.createTempDirectory(jarFile.toAbsolutePath().getParent(), "implementor_temp");
         } catch (IOException e) {
             throw new ImplerException("Can't create temp directory", e);
         }
