@@ -137,7 +137,6 @@ public class WebCrawler implements Crawler {
         if (args == null || Arrays.stream(args).anyMatch(Objects::isNull)) {
             System.err.println("Arguments can't be null");
         } else {
-            String url;
             int depth = 1;
             int downloaders = 1;
             int extractors = 1;
@@ -157,7 +156,7 @@ public class WebCrawler implements Crawler {
                     case 2:
                         depth = Integer.max(depth, Integer.parseInt(args[1]));
                     case 1:
-                        url = args[0];
+                        String url = args[0];
 
                         try (Crawler crawler = new WebCrawler(new CachingDownloader(), downloaders, extractors, perHost)) {
                             Result result = crawler.download(url, depth);
