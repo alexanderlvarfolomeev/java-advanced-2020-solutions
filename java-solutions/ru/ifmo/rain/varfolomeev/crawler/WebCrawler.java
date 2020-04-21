@@ -17,59 +17,6 @@ public class WebCrawler implements Crawler {
     private final int perHost;
     private final ConcurrentMap<String, Host> hosts;
 
-    private static class LinkExtractor {
-        private final Set<String> passed;
-        private BlockingQueue<String> queue;
-
-        LinkExtractor(Set<String> passed) {
-            this.passed = passed;
-            this.queue = new LinkedBlockingQueue<>();
-        }
-
-        void extractLinks(Document document) throws IOException {
-            document.extractLinks().stream().filter(passed::add).forEach(queue::add);
-        }
-
-        BlockingQueue<String> getQueue() {
-            return queue;
-        }
-
-        BlockingQueue<String> getAndSetQueue() {
-            BlockingQueue<String> queue = getQueue();
-            this.queue = new LinkedBlockingQueue<>();
-            return queue;
-        }
-    }
-
-    private class Host {
-        private final BlockingQueue<Runnable> queue;
-        private final Semaphore semaphore;
-
-        private Host() {
-            this.queue = new LinkedBlockingQueue<>();
-            this.semaphore = new Semaphore(perHost);
-        }
-
-        void addTask(Runnable task) {
-            if (semaphore.tryAcquire()) {
-                downloadersExecutor.submit(() -> {
-                    task.run();
-                    runNextTask();
-                });
-            } else {
-                queue.add(task);
-            }
-        }
-
-        void runNextTask() {
-            Runnable task;
-            while ((task = queue.poll()) != null) {
-                task.run();
-            }
-            semaphore.release();
-        }
-    }
-
     public WebCrawler(Downloader downloader, int downloaders, int extractors, int perHost) {
         this.downloader = downloader;
         downloadersExecutor = Executors.newFixedThreadPool(downloaders);
@@ -131,6 +78,59 @@ public class WebCrawler implements Crawler {
     public void close() {
         downloadersExecutor.shutdownNow();
         extractorsExecutor.shutdownNow();
+    }
+
+    private static class LinkExtractor {
+        private final Set<String> passed;
+        private BlockingQueue<String> queue;
+
+        LinkExtractor(Set<String> passed) {
+            this.passed = passed;
+            this.queue = new LinkedBlockingQueue<>();
+        }
+
+        void extractLinks(Document document) throws IOException {
+            document.extractLinks().stream().filter(passed::add).forEach(queue::add);
+        }
+
+        BlockingQueue<String> getQueue() {
+            return queue;
+        }
+
+        BlockingQueue<String> getAndSetQueue() {
+            BlockingQueue<String> queue = getQueue();
+            this.queue = new LinkedBlockingQueue<>();
+            return queue;
+        }
+    }
+
+    private class Host {
+        private final BlockingQueue<Runnable> queue;
+        private final Semaphore semaphore;
+
+        private Host() {
+            this.queue = new LinkedBlockingQueue<>();
+            this.semaphore = new Semaphore(perHost);
+        }
+
+        void addTask(Runnable task) {
+            if (semaphore.tryAcquire()) {
+                downloadersExecutor.submit(() -> {
+                    task.run();
+                    runNextTask();
+                });
+            } else {
+                queue.add(task);
+            }
+        }
+
+        void runNextTask() {
+            Runnable task;
+            while ((task = queue.poll()) != null) {
+                task.run();
+            }
+            semaphore.release();
+        }
     }
 
     public static void main(String[] args) {
