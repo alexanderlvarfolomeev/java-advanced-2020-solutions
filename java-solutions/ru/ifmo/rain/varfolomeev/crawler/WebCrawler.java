@@ -15,7 +15,7 @@ public class WebCrawler implements Crawler {
     private final ExecutorService downloadersExecutor;
     private final ExecutorService extractorsExecutor;
     private final int perHost;
-    private final ConcurrentMap<String, Host> hosts;
+    private final ConcurrentMap<String, HostManager> hosts;
     
     /**
      * Creates new WebCrawler instance
@@ -35,10 +35,10 @@ public class WebCrawler implements Crawler {
     private void addLink(String url, int depth, Phaser phaser, ConcurrentMap<String, IOException> errors, Set<String> downloaded, Set<String> passed) {
         try {
             String hostName = URLUtils.getHost(url);
-            Host host = hosts.compute(hostName, (k, v) -> v == null ? new Host() : v);
+            HostManager hostManager = hosts.compute(hostName, (k, v) -> v == null ? new HostManager() : v);
 
             phaser.register();
-            host.addTask(() -> {
+            hostManager.addTask(() -> {
                 try {
                     Document document = downloader.download(url);
                     phaser.register();
@@ -47,7 +47,7 @@ public class WebCrawler implements Crawler {
                     errors.put(url, e);
                 } finally {
                     phaser.arrive();
-                    host.runNextTask();
+                    hostManager.runNextTask();
                 }
             });
         } catch (MalformedURLException e) {
@@ -88,11 +88,11 @@ public class WebCrawler implements Crawler {
         extractorsExecutor.shutdownNow();
     }
 
-    private class Host {
+    private class HostManager {
         private final BlockingQueue<Runnable> queue;
         private final Semaphore semaphore;
 
-        private Host() {
+        private HostManager() {
             this.queue = new LinkedBlockingQueue<>();
             this.semaphore = new Semaphore(perHost);
         }
