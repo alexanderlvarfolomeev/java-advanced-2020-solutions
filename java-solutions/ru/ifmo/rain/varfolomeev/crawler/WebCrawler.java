@@ -12,8 +12,8 @@ import java.util.concurrent.*;
 
 public class WebCrawler implements Crawler {
     private final Downloader downloader;
-    private final ExecutorService downloadersExecutor;
-    private final ExecutorService extractorsExecutor;
+    private final ExecutorService downloaderExecutor;
+    private final ExecutorService extractorExecutor;
     private final int perHost;
     private final ConcurrentMap<String, HostManager> hosts;
     
@@ -26,8 +26,8 @@ public class WebCrawler implements Crawler {
      */
     public WebCrawler(Downloader downloader, int downloaderCount, int extractorCount, int perHost) {
         this.downloader = downloader;
-        downloadersExecutor = Executors.newFixedThreadPool(downloaderCount);
-        extractorsExecutor = Executors.newFixedThreadPool(extractorCount);
+        downloaderExecutor = Executors.newFixedThreadPool(downloaderCount);
+        extractorExecutor = Executors.newFixedThreadPool(extractorCount);
         this.perHost = perHost;
         hosts = new ConcurrentHashMap<>();
     }
@@ -42,7 +42,8 @@ public class WebCrawler implements Crawler {
                 try {
                     Document document = downloader.download(url);
                     phaser.register();
-                    extractorsExecutor.submit(() -> extractLinks(url, document, depth - 1, phaser, errors, downloaded, passed));
+                    extractorExecutor
+                            .submit(() -> extractLinks(url, document, depth - 1, phaser, errors, downloaded, passed));
                 } catch (IOException e) {
                     errors.put(url, e);
                 } finally {
@@ -84,8 +85,8 @@ public class WebCrawler implements Crawler {
 
     @Override
     public void close() {
-        downloadersExecutor.shutdownNow();
-        extractorsExecutor.shutdownNow();
+        downloaderExecutor.shutdownNow();
+        extractorExecutor.shutdownNow();
     }
 
     private class HostManager {
@@ -99,7 +100,7 @@ public class WebCrawler implements Crawler {
 
         private void addTask(Runnable task) {
             if (semaphore.tryAcquire()) {
-                downloadersExecutor.submit(task);
+                downloaderExecutor.submit(task);
             } else {
                 queue.add(task);
             }
