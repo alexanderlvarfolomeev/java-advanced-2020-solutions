@@ -36,7 +36,7 @@ public class WebCrawler implements Crawler {
         Set<String> passed = ConcurrentHashMap.newKeySet();
 
         Queue<String> currentQueue = new ConcurrentLinkedQueue<>();
-        LinkExtractor extractor = new LinkExtractor(passed);
+        UrlExtractor extractor = new UrlExtractor(passed);
         currentQueue.add(url);
         passed.add(url);
         for (int i = 0; i < depth; i++) {
@@ -50,7 +50,7 @@ public class WebCrawler implements Crawler {
                             Document document = downloader.download(u);
                             extractorExecutor.submit(() -> {
                                 try {
-                                    extractor.extractLinks(document);
+                                    extractor.extractUrls(document);
                                     downloaded.add(u);
                                 } catch (IOException e) {
                                     errors.put(u, e);
@@ -85,16 +85,16 @@ public class WebCrawler implements Crawler {
         extractorExecutor.shutdownNow();
     }
 
-    private static class LinkExtractor {
+    private static class UrlExtractor {
         private final Set<String> passed;
         private Queue<String> queue;
 
-        private LinkExtractor(Set<String> passed) {
+        private UrlExtractor(Set<String> passed) {
             this.passed = passed;
             this.queue = new ConcurrentLinkedQueue<>();
         }
 
-        private void extractLinks(Document document) throws IOException {
+        private void extractUrls(Document document) throws IOException {
             document.extractLinks().parallelStream().filter(passed::add).forEach(queue::add);
         }
 
