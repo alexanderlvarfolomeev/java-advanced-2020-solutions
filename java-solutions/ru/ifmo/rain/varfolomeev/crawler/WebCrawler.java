@@ -15,8 +15,8 @@ public class WebCrawler implements Crawler {
     private final ExecutorService downloaderExecutor;
     private final ExecutorService extractorExecutor;
     private final int perHost;
-    private final ConcurrentMap<String, HostManager> hosts;
-    
+    private final ConcurrentMap<String, Host> hosts;
+
     /**
      * Creates new WebCrawler instance
      * @param downloader      {@link Downloader} which will be used to download pages
@@ -32,54 +32,52 @@ public class WebCrawler implements Crawler {
         hosts = new ConcurrentHashMap<>();
     }
 
-    private void addLink(String url, int depth, Phaser phaser, ConcurrentMap<String, IOException> errors, Set<String> downloaded, Set<String> passed) {
-        try {
-            String hostName = URLUtils.getHost(url);
-            HostManager hostManager = hosts.compute(hostName, (k, v) -> v == null ? new HostManager() : v);
-
-            phaser.register();
-            hostManager.addTask(() -> {
-                try {
-                    Document document = downloader.download(url);
-                    phaser.register();
-                    extractorExecutor
-                            .submit(() -> extractLinks(url, document, depth - 1, phaser, errors, downloaded, passed));
-                } catch (IOException e) {
-                    errors.put(url, e);
-                } finally {
-                    phaser.arrive();
-                    hostManager.runNextTask();
-                }
-            });
-        } catch (MalformedURLException e) {
-            errors.put(url, e);
-        }
-    }
-
-    private void extractLinks(String url, Document document, int depth, Phaser phaser,
-                              ConcurrentMap<String, IOException> errors, Set<String> downloaded, Set<String> passed) {
-        try {
-            if (depth > 0) {
-                document.extractLinks().stream()
-                        .filter(passed::add).forEach(link -> addLink(link, depth, phaser, errors, downloaded, passed));
-            }
-            downloaded.add(url);
-        } catch (IOException e) {
-            errors.put(url, e);
-        } finally {
-            phaser.arrive();
-        }
-    }
-
     @Override
     public Result download(String url, int depth) {
         Set<String> downloaded = ConcurrentHashMap.newKeySet();
         ConcurrentMap<String, IOException> errors = new ConcurrentHashMap<>();
         Set<String> passed = ConcurrentHashMap.newKeySet();
-        Phaser phaser = new Phaser(1);
+
+        BlockingQueue<String> currentQueue = new LinkedBlockingQueue<>();
+        LinkExtractor extractor = new LinkExtractor(passed);
+        currentQueue.add(url);
         passed.add(url);
-        addLink(url, depth, phaser, errors, downloaded, passed);
-        phaser.arriveAndAwaitAdvance();
+        for (int i = 0; i < depth; i++) {
+            CountDownLatch latch = new CountDownLatch(currentQueue.size());
+            currentQueue.forEach(u -> {
+                try {
+                    String hostName = URLUtils.getHost(u);
+                    Host host = hosts.compute(hostName, (k, v) -> v == null ? new Host() : v);
+                    host.addTask(() -> {
+                        try {
+                            Document document = downloader.download(u);
+                            extractorExecutor.submit(() -> {
+                                try {
+                                    extractor.extractLinks(document);
+                                    downloaded.add(u);
+                                } catch (IOException e) {
+                                    errors.put(u, e);
+                                } finally {
+                                    latch.countDown();
+                                }
+                            });
+                        } catch (IOException e) {
+                            errors.put(u, e);
+                            latch.countDown();
+                        }
+                    });
+                } catch (MalformedURLException e) {
+                    errors.put(u, e);
+                    latch.countDown();
+                }
+            });
+            try {
+                latch.await();
+            } catch (InterruptedException ignored) {
+            }
+            currentQueue = extractor.getAndSetQueue();
+        }
+
         return new Result(List.copyOf(downloaded), errors);
     }
 
@@ -89,18 +87,45 @@ public class WebCrawler implements Crawler {
         extractorExecutor.shutdownNow();
     }
 
-    private class HostManager {
+    private static class LinkExtractor {
+        private final Set<String> passed;
+        private BlockingQueue<String> queue;
+
+        private LinkExtractor(Set<String> passed) {
+            this.passed = passed;
+            this.queue = new LinkedBlockingQueue<>();
+        }
+
+        private void extractLinks(Document document) throws IOException {
+            document.extractLinks().parallelStream().filter(passed::add).forEach(queue::add);
+        }
+
+        private BlockingQueue<String> getQueue() {
+            return queue;
+        }
+
+        private BlockingQueue<String> getAndSetQueue() {
+            BlockingQueue<String> queue = getQueue();
+            this.queue = new LinkedBlockingQueue<>();
+            return queue;
+        }
+    }
+
+    private class Host {
         private final BlockingQueue<Runnable> queue;
         private final Semaphore semaphore;
 
-        private HostManager() {
+        private Host() {
             this.queue = new LinkedBlockingQueue<>();
             this.semaphore = new Semaphore(perHost);
         }
 
         private void addTask(Runnable task) {
             if (semaphore.tryAcquire()) {
-                downloaderExecutor.submit(task);
+                downloaderExecutor.submit(() -> {
+                    task.run();
+                    runNextTask();
+                });
             } else {
                 queue.add(task);
             }
@@ -142,7 +167,7 @@ public class WebCrawler implements Crawler {
                     case 1:
                         String url = args[0];
 
-                        try (Crawler crawler = new ru.ifmo.rain.varfolomeev.crawler.WebCrawler(new CachingDownloader(), downloaders, extractors, perHost)) {
+                        try (Crawler crawler = new WebCrawler(new CachingDownloader(), downloaders, extractors, perHost)) {
                             Result result = crawler.download(url, depth);
                             System.out.println("Successfully downloaded pages:");
                             result.getDownloaded().forEach(System.out::println);
