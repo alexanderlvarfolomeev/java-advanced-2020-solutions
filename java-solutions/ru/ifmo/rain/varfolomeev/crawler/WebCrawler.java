@@ -41,7 +41,7 @@ public class WebCrawler implements Crawler {
         passed.add(url);
         for (int i = 0; i < depth; i++) {
             CountDownLatch latch = new CountDownLatch(currentQueue.size());
-            currentQueue.forEach(u -> {
+            currentQueue.parallelStream().forEach(u -> {
                 try {
                     String hostName = URLUtils.getHost(u);
                     HostManager hostManager = hostManagers.compute(hostName, (k, v) -> v == null ? new HostManager() : v);
