@@ -15,7 +15,7 @@ public class WebCrawler implements Crawler {
     private final ExecutorService downloaderExecutor;
     private final ExecutorService extractorExecutor;
     private final int perHost;
-    private final ConcurrentMap<String, Host> hosts;
+    private final ConcurrentMap<String, HostManager> hosts;
 
     /**
      * Creates new WebCrawler instance
@@ -47,8 +47,8 @@ public class WebCrawler implements Crawler {
             currentQueue.forEach(u -> {
                 try {
                     String hostName = URLUtils.getHost(u);
-                    Host host = hosts.compute(hostName, (k, v) -> v == null ? new Host() : v);
-                    host.addTask(() -> {
+                    HostManager hostManager = hosts.compute(hostName, (k, v) -> v == null ? new HostManager() : v);
+                    hostManager.addTask(() -> {
                         try {
                             Document document = downloader.download(u);
                             extractorExecutor.submit(() -> {
@@ -111,11 +111,11 @@ public class WebCrawler implements Crawler {
         }
     }
 
-    private class Host {
+    private class HostManager {
         private final BlockingQueue<Runnable> queue;
         private final Semaphore semaphore;
 
-        private Host() {
+        private HostManager() {
             this.queue = new LinkedBlockingQueue<>();
             this.semaphore = new Semaphore(perHost);
         }
