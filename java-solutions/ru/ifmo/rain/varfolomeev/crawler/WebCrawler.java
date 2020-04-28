@@ -4,10 +4,7 @@ import info.kgeorgiy.java.advanced.crawler.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class WebCrawler implements Crawler {
@@ -38,7 +35,7 @@ public class WebCrawler implements Crawler {
         ConcurrentMap<String, IOException> errors = new ConcurrentHashMap<>();
         Set<String> passed = ConcurrentHashMap.newKeySet();
 
-        BlockingQueue<String> currentQueue = new LinkedBlockingQueue<>();
+        Queue<String> currentQueue = new ConcurrentLinkedQueue<>();
         LinkExtractor extractor = new LinkExtractor(passed);
         currentQueue.add(url);
         passed.add(url);
@@ -90,30 +87,30 @@ public class WebCrawler implements Crawler {
 
     private static class LinkExtractor {
         private final Set<String> passed;
-        private BlockingQueue<String> queue;
+        private Queue<String> queue;
 
         private LinkExtractor(Set<String> passed) {
             this.passed = passed;
-            this.queue = new LinkedBlockingQueue<>();
+            this.queue = new ConcurrentLinkedQueue<>();
         }
 
         private void extractLinks(Document document) throws IOException {
             document.extractLinks().parallelStream().filter(passed::add).forEach(queue::add);
         }
 
-        private BlockingQueue<String> getQueue() {
-            BlockingQueue<String> oldQueue = queue;
-            queue = new LinkedBlockingQueue<>();
+        private Queue<String> getQueue() {
+            Queue<String> oldQueue = queue;
+            queue = new ConcurrentLinkedQueue<>();
             return oldQueue;
         }
     }
 
     private class HostManager {
-        private final BlockingQueue<Runnable> queue;
+        private final Queue<Runnable> queue;
         private final Semaphore semaphore;
 
         private HostManager() {
-            this.queue = new LinkedBlockingQueue<>();
+            this.queue = new ConcurrentLinkedQueue<>();
             this.semaphore = new Semaphore(perHost);
         }
 
