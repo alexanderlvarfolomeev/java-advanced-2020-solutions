@@ -76,7 +76,7 @@ public class WebCrawler implements Crawler {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            currentQueue = extractor.getAndSetQueue();
+            currentQueue = extractor.getQueue();
         }
 
         return new Result(List.copyOf(downloaded), errors);
@@ -102,13 +102,9 @@ public class WebCrawler implements Crawler {
         }
 
         private BlockingQueue<String> getQueue() {
-            return queue;
-        }
-
-        private BlockingQueue<String> getAndSetQueue() {
-            BlockingQueue<String> queue = getQueue();
-            this.queue = new LinkedBlockingQueue<>();
-            return queue;
+            BlockingQueue<String> oldQueue = queue;
+            queue = new LinkedBlockingQueue<>();
+            return oldQueue;
         }
     }
 
