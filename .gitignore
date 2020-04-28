@@ -8,3 +8,6 @@ java-solutions/info
 java-solutions/Main.java
 java-solutions/module-info.java
 java-advanced-2020-solutions.iml
+java-solutions/ru/ifmo/rain/varfolomeev/implementor/_implementor.jar
+java-solutions/ru/ifmo/rain/varfolomeev/implementor/build-jar-module.cmd
+java-solutions/ru/ifmo/rain/varfolomeev/implementor/javadoc-module.cmd
