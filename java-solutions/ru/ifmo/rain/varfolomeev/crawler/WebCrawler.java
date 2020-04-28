@@ -15,7 +15,7 @@ public class WebCrawler implements Crawler {
     private final ExecutorService downloaderExecutor;
     private final ExecutorService extractorExecutor;
     private final int perHost;
-    private final ConcurrentMap<String, HostManager> hosts;
+    private final ConcurrentMap<String, HostManager> hostManagers;
 
     /**
      * Creates new WebCrawler instance
@@ -29,7 +29,7 @@ public class WebCrawler implements Crawler {
         downloaderExecutor = Executors.newFixedThreadPool(downloaderCount);
         extractorExecutor = Executors.newFixedThreadPool(extractorCount);
         this.perHost = perHost;
-        hosts = new ConcurrentHashMap<>();
+        hostManagers = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -47,7 +47,7 @@ public class WebCrawler implements Crawler {
             currentQueue.forEach(u -> {
                 try {
                     String hostName = URLUtils.getHost(u);
-                    HostManager hostManager = hosts.compute(hostName, (k, v) -> v == null ? new HostManager() : v);
+                    HostManager hostManager = hostManagers.compute(hostName, (k, v) -> v == null ? new HostManager() : v);
                     hostManager.addTask(() -> {
                         try {
                             Document document = downloader.download(u);
