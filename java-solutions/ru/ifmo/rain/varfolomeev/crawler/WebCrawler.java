@@ -74,6 +74,7 @@ public class WebCrawler implements Crawler {
             try {
                 latch.await();
             } catch (InterruptedException ignored) {
+                // Do nothing
             }
             currentQueue = extractor.getAndSetQueue();
         }
