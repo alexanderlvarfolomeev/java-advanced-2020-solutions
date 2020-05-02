@@ -39,15 +39,25 @@ public class HelloUDPServer implements HelloServer {
                         new byte[datagramSocket.getReceiveBufferSize()],
                         datagramSocket.getReceiveBufferSize());
                 datagramSocket.receive(request);
-                String requestMessage = new String(request.getData(), request.getOffset(),
-                        request.getLength(), StandardCharsets.UTF_8);
-                DatagramPacket response = new DatagramPacket(new byte[0], 0, request.getSocketAddress());
-                response.setData(("Hello, " + requestMessage).getBytes(StandardCharsets.UTF_8));
-                datagramSocket.send(response);
+                executorService.submit(() -> respond(request));
             } catch (IOException e) {
                 if (started) {
-                    System.err.println("Failed to handle packet: " + e.getMessage());
+                    System.err.println("Failed to receive packet: " + e.getMessage());
                 }
+            }
+        }
+    }
+
+    private void respond(DatagramPacket request) {
+        String requestMessage = new String(request.getData(), request.getOffset(),
+                request.getLength(), StandardCharsets.UTF_8);
+        DatagramPacket response = new DatagramPacket(new byte[0], 0, request.getSocketAddress());
+        response.setData(("Hello, " + requestMessage).getBytes(StandardCharsets.UTF_8));
+        try {
+            datagramSocket.send(response);
+        } catch (IOException e) {
+            if (started) {
+                System.err.println("Failed to send packet: " + e.getMessage());
             }
         }
     }
