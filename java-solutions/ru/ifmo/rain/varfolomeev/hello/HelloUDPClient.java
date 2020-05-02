@@ -58,7 +58,7 @@ public class HelloUDPClient implements HelloClient {
                         datagramSocket.receive(response);
                         String responseMessage = new String(response.getData(), response.getOffset(),
                                 response.getLength(), StandardCharsets.UTF_8);
-                        if (isResponseValid(requestMessage, responseMessage)) {
+                        if (responseMessage.contains(requestMessage)) {
                             System.out.println("Receiving: " + responseMessage);
                             break;
                         } else {
@@ -74,9 +74,5 @@ public class HelloUDPClient implements HelloClient {
         } finally {
             latch.countDown();
         }
-    }
-
-    private boolean isResponseValid(String requestMessage, String responseMessage) {
-        return responseMessage.contains(requestMessage);
     }
 }
