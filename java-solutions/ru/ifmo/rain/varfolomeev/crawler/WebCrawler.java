@@ -134,34 +134,45 @@ public class WebCrawler implements Crawler {
         }
     }
 
+    private static int getIntArgument(String argumentName, String stringArgument) throws NumberFormatException {
+        try {
+            return Integer.parseInt(stringArgument);
+        } catch (NumberFormatException e) {
+            throw new NumberFormatException(
+                    String.format("Can't parse argument '%s'. Found '%s'. %s",
+                            argumentName, stringArgument, e.getMessage()));
+        }
+    }
+
     /**
      * Runs WebCrawler on the certain url
-     * Usage: WebCrawler url [depth [downloads [extractors [perHost]]]]
+     * Usage: WebCrawler url [depth [downloaderCount [extractorCount [perHost]]]]
      * @param args array of String representations of WebCrawler arguments
      */
     public static void main(String[] args) {
         if (args == null || Arrays.stream(args).anyMatch(Objects::isNull)) {
             System.err.println("Arguments can't be null");
         } else {
-            int depth = 1;
-            int downloaders = 1;
-            int extractors = 1;
-            int perHost = Integer.MAX_VALUE;
 
             try {
+                int depth = 1;
+                int downloaderCount = 1;
+                int extractorCount = 1;
+                int perHost = Integer.MAX_VALUE;
+
                 switch (args.length) {
                     case 5:
-                        perHost = Integer.max(1, Integer.parseInt(args[4]));
+                        perHost = getIntArgument("perHost", args[4]);
                     case 4:
-                        extractors = Integer.max(extractors, Integer.parseInt(args[3]));
+                        extractorCount = getIntArgument("extractorCount", args[3]);
                     case 3:
-                        downloaders = Integer.max(downloaders, Integer.parseInt(args[2]));
+                        downloaderCount = getIntArgument("downloaderCount", args[2]);
                     case 2:
-                        depth = Integer.max(depth, Integer.parseInt(args[1]));
+                        depth = getIntArgument("depth", args[1]);
                     case 1:
                         String url = args[0];
 
-                        try (Crawler crawler = new WebCrawler(new CachingDownloader(), downloaders, extractors, perHost)) {
+                        try (Crawler crawler = new WebCrawler(new CachingDownloader(), downloaderCount, extractorCount, perHost)) {
                             Result result = crawler.download(url, depth);
                             System.out.println("Successfully downloaded pages:");
                             result.getDownloaded().forEach(System.out::println);
@@ -173,7 +184,7 @@ public class WebCrawler implements Crawler {
                         }
                         break;
                     default:
-                        System.err.println("Usage WebCrawler url [depth [downloaders [extractors [perHost]]]]");
+                        System.err.println("Usage WebCrawler url [depth [downloaderCount [extractorCount [perHost]]]]");
                 }
             } catch (NumberFormatException e) {
                 System.err.println("Can't parse integer: " + e.getMessage());
