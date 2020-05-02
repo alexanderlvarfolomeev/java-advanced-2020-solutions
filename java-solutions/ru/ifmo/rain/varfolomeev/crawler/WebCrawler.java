@@ -18,7 +18,7 @@ public class WebCrawler implements Crawler {
      * Creates new WebCrawler instance
      * @param downloader      {@link Downloader} which will be used to download pages
      * @param downloaderCount count of threads to download pages
-     * @param extractorCount  count of threads to download pages
+     * @param extractorCount  count of threads to extract links
      * @param perHost         count of one host pages that can be downloaded in parallel
      */
     public WebCrawler(Downloader downloader, int downloaderCount, int extractorCount, int perHost) {
@@ -176,6 +176,7 @@ public class WebCrawler implements Crawler {
                             Result result = crawler.download(url, depth);
                             System.out.println("Successfully downloaded pages:");
                             result.getDownloaded().forEach(System.out::println);
+                            System.out.println();
                             System.out.println();
                             System.out.println("Pages downloaded with errors:");
                             result.getErrors().forEach((p, e) -> System.out.println(p + ": " + e.getMessage()));
