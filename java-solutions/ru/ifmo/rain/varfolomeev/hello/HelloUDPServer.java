@@ -27,8 +27,8 @@ public class HelloUDPServer implements HelloServer {
                     new LinkedBlockingQueue<>(1000), new ThreadPoolExecutor.DiscardPolicy());
             distributionService.submit(this::runServer);
             started = true;
-        } catch (SocketException ignored) {
-            // Do nothing
+        } catch (SocketException e) {
+            throw new RuntimeException("Can't create DatagramSocket instance", e);
         }
     }
 
@@ -42,7 +42,7 @@ public class HelloUDPServer implements HelloServer {
                 executorService.submit(() -> respond(request));
             } catch (IOException e) {
                 if (started) {
-                    System.err.println("Failed to receive packet: " + e.getMessage());
+                    System.out.println("Failed to receive packet: " + e.getMessage());
                 }
             }
         }
@@ -57,7 +57,7 @@ public class HelloUDPServer implements HelloServer {
             datagramSocket.send(response);
         } catch (IOException e) {
             if (started) {
-                System.err.println("Failed to send packet: " + e.getMessage());
+                System.out.println("Failed to send packet: " + e.getMessage());
             }
         }
     }
