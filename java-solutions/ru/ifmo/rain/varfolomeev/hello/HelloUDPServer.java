@@ -58,8 +58,8 @@ public class HelloUDPServer implements HelloServer {
     private void respond(DatagramPacket request) {
         String requestMessage = new String(request.getData(), request.getOffset(),
                 request.getLength(), StandardCharsets.UTF_8);
-        DatagramPacket response = new DatagramPacket(new byte[0], 0, request.getSocketAddress());
-        response.setData(("Hello, " + requestMessage).getBytes(StandardCharsets.UTF_8));
+        byte[] responseData = ("Hello, " + requestMessage).getBytes(StandardCharsets.UTF_8);
+        DatagramPacket response = new DatagramPacket(responseData, responseData.length, request.getSocketAddress());
         try {
             datagramSocket.send(response);
         } catch (IOException e) {
@@ -86,8 +86,10 @@ public class HelloUDPServer implements HelloServer {
         } else if (args.length != 2) {
             System.err.println("Usage: HelloUDPServer port threadCount");
         } else {
-            new HelloUDPServer().start(getIntArgument("port", args[0]),
-                    getIntArgument("threadCount", args[1]));
+            try (HelloServer helloServer = new HelloUDPServer()) {
+                helloServer.start(getIntArgument("port", args[0]),
+                        getIntArgument("threadCount", args[1]));
+            }
         }
     }
 }
