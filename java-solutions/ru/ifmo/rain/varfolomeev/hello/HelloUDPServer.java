@@ -87,7 +87,7 @@ public class HelloUDPServer implements HelloServer {
             System.err.println("Usage: HelloUDPServer port threadCount");
         } else {
             new HelloUDPServer().start(getIntArgument("port", args[0]),
-                    getIntArgument("threadCount", args[0]));
+                    getIntArgument("threadCount", args[1]));
         }
     }
 }
