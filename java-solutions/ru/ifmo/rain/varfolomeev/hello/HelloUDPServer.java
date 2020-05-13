@@ -24,26 +24,28 @@ public class HelloUDPServer implements HelloServer {
         if (threadCount < 1) {
             throw new IllegalArgumentException("Thread count must be positive");
         }
+
         if (started) {
-            close();
+            throw new IllegalStateException("The server is already started");
         }
+
         try {
             datagramSocket = new DatagramSocket(port);
-            distributionService = Executors.newSingleThreadExecutor();
-            executorService = new ThreadPoolExecutor(threadCount, threadCount, 500, TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<>(1000), new ThreadPoolExecutor.DiscardPolicy());
-            distributionService.submit(this::runServer);
-            started = true;
         } catch (SocketException e) {
             throw new RuntimeException("Can't create DatagramSocket instance", e);
         }
+
+        distributionService = Executors.newSingleThreadExecutor();
+        executorService = new ThreadPoolExecutor(threadCount, threadCount, 500, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(1000), new ThreadPoolExecutor.DiscardPolicy());
+        distributionService.submit(this::runServer);
+        started = true;
     }
 
     private void runServer() {
         while (!datagramSocket.isClosed()) {
             try {
-                DatagramPacket request = new DatagramPacket(
-                        new byte[datagramSocket.getReceiveBufferSize()],
+                DatagramPacket request = new DatagramPacket(new byte[datagramSocket.getReceiveBufferSize()],
                         datagramSocket.getReceiveBufferSize());
                 datagramSocket.receive(request);
                 executorService.submit(() -> respond(request));
@@ -56,8 +58,8 @@ public class HelloUDPServer implements HelloServer {
     }
 
     private void respond(DatagramPacket request) {
-        String requestMessage = new String(request.getData(), request.getOffset(),
-                request.getLength(), StandardCharsets.UTF_8);
+        String requestMessage = new String(request.getData(), request.getOffset(), request.getLength(),
+                StandardCharsets.UTF_8);
         DatagramPacket response = new DatagramPacket(new byte[0], 0, request.getSocketAddress());
         response.setData(("Hello, " + requestMessage).getBytes(StandardCharsets.UTF_8));
         try {
@@ -76,8 +78,10 @@ public class HelloUDPServer implements HelloServer {
         datagramSocket.close();
         started = false;
     }
+
     /**
      * Starts HelloUDPServer with given arguments
+     *
      * @param args {@link #start(int, int)} arguments
      */
     public static void main(String[] args) {
@@ -86,8 +90,10 @@ public class HelloUDPServer implements HelloServer {
         } else if (args.length != 2) {
             System.err.println("Usage: HelloUDPServer port threadCount");
         } else {
-            new HelloUDPServer().start(getIntArgument("port", args[0]),
-                    getIntArgument("threadCount", args[1]));
+            try (HelloUDPServer helloUDPServer = new HelloUDPServer()) {
+                helloUDPServer.start(getIntArgument("port", args[0]),
+                        getIntArgument("threadCount", args[1]));
+            }
         }
     }
 }
