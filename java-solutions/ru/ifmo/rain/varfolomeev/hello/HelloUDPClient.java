@@ -19,24 +19,30 @@ public class HelloUDPClient implements HelloClient {
         if (threadCount < 1) {
             throw new IllegalArgumentException("Thread count must be positive");
         }
+
         if (requestCount < 0) {
             throw new IllegalArgumentException("Request count can't be negative");
         }
+
         if (prefix == null) {
             throw new IllegalArgumentException("Request prefix can't be 'null'");
+
         }
+
         SocketAddress socketAddress;
         try {
             socketAddress = new InetSocketAddress(InetAddress.getByName(hostname), port);
         } catch (UnknownHostException e) {
             throw new IllegalArgumentException(e);
         }
+
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
         CountDownLatch latch = new CountDownLatch(threadCount);
         for (int thread = 0; thread < threadCount; thread++) {
             final int threadNumber = thread;
             executorService.submit(() -> sendAndReceive(socketAddress, prefix, threadNumber, requestCount, latch));
         }
+
         executorService.shutdown();
         try {
             latch.await();
@@ -60,8 +66,8 @@ public class HelloUDPClient implements HelloClient {
                         datagramSocket.send(request);
                         System.out.println("Sending: " + requestMessage);
                         datagramSocket.receive(response);
-                        String responseMessage = new String(response.getData(), response.getOffset(),
-                                response.getLength(), StandardCharsets.UTF_8);
+                        String responseMessage = new String(response.getData(),
+                                response.getOffset(), response.getLength(), StandardCharsets.UTF_8);
                         if (responseMessage.contains(requestMessage)) {
                             System.out.println("Receiving: " + responseMessage);
                             break;
