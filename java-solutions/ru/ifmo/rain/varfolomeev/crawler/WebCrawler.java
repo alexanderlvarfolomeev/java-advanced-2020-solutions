@@ -138,7 +138,7 @@ public class WebCrawler implements Crawler {
             int depth = 1;
             int downloaders = 1;
             int extractors = 1;
-            int perHost = Integer.MAX_VALUE;
+            int perHost = 1;
 
             try {
                 switch (args.length) {
