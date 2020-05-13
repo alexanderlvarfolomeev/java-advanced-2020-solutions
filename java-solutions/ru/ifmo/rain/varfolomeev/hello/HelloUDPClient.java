@@ -5,9 +5,13 @@ import info.kgeorgiy.java.advanced.hello.HelloClient;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static ru.ifmo.rain.varfolomeev.hello.HelloUDPService.getIntArgument;
 
 public class HelloUDPClient implements HelloClient {
     @Override
@@ -73,6 +77,21 @@ public class HelloUDPClient implements HelloClient {
             //Do nothing
         } finally {
             latch.countDown();
+        }
+    }
+
+    /**
+     * Runs HelloUDPClient with given arguments
+     * @param args {@link #run(String, int, String, int, int)} arguments
+     */
+    public static void main(String[] args) {
+        if (args == null || Arrays.stream(args).anyMatch(Objects::isNull)) {
+            System.err.println("Arguments can't be null");
+        } else if (args.length != 5) {
+            System.err.println("Usage: HelloUDPClient hostname port prefix threadCount requestCount");
+        } else {
+            new HelloUDPClient().run(args[0], getIntArgument("port", args[1]), args[2],
+                    getIntArgument("threadCount", args[3]), getIntArgument("requestCount", args[4]));
         }
     }
 }

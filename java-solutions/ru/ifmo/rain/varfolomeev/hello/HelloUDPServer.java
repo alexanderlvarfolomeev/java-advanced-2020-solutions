@@ -7,7 +7,11 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.*;
+
+import static ru.ifmo.rain.varfolomeev.hello.HelloUDPService.getIntArgument;
 
 public class HelloUDPServer implements HelloServer {
     private DatagramSocket datagramSocket = null;
@@ -71,5 +75,19 @@ public class HelloUDPServer implements HelloServer {
         executorService.shutdownNow();
         datagramSocket.close();
         started = false;
+    }
+    /**
+     * Starts HelloUDPServer with given arguments
+     * @param args {@link #start(int, int)} arguments
+     */
+    public static void main(String[] args) {
+        if (args == null || Arrays.stream(args).anyMatch(Objects::isNull)) {
+            System.err.println("Arguments can't be null");
+        } else if (args.length != 2) {
+            System.err.println("Usage: HelloUDPServer port threadCount");
+        } else {
+            new HelloUDPServer().start(getIntArgument("port", args[0]),
+                    getIntArgument("threadCount", args[0]));
+        }
     }
 }
