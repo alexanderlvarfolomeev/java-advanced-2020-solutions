@@ -12,8 +12,8 @@ import java.util.concurrent.Executors;
 public class HelloUDPClient implements HelloClient {
     @Override
     public void run(String hostname, int port, String prefix, int threadCount, int requestCount) {
-        if (threadCount < 0) {
-            throw new IllegalArgumentException("Thread count can't be negative");
+        if (threadCount < 1) {
+            throw new IllegalArgumentException("Thread count must be positive");
         }
         if (requestCount < 0) {
             throw new IllegalArgumentException("Request count can't be negative");

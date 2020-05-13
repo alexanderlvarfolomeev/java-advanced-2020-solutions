@@ -17,6 +17,9 @@ public class HelloUDPServer implements HelloServer {
 
     @Override
     public synchronized void start(int port, int threadCount) {
+        if (threadCount < 1) {
+            throw new IllegalArgumentException("Thread count must be positive");
+        }
         if (started) {
             close();
         }
