@@ -11,7 +11,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static ru.ifmo.rain.varfolomeev.hello.HelloUDPService.getIntArgument;
+import static ru.ifmo.rain.varfolomeev.hello.HelloUDPUtil.getIntArgument;
 
 public class HelloUDPClient implements HelloClient {
     @Override

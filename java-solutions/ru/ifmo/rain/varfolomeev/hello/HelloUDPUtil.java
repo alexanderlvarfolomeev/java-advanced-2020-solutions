@@ -1,6 +1,6 @@
 package ru.ifmo.rain.varfolomeev.hello;
 
-class HelloUDPService {
+class HelloUDPUtil {
     static int getIntArgument(String argumentName, String stringArgument) throws NumberFormatException {
         try {
             return Integer.parseInt(stringArgument);

@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.*;
 
-import static ru.ifmo.rain.varfolomeev.hello.HelloUDPService.getIntArgument;
+import static ru.ifmo.rain.varfolomeev.hello.HelloUDPUtil.getIntArgument;
 
 public class HelloUDPServer implements HelloServer {
     private DatagramSocket datagramSocket = null;
