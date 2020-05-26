@@ -2,22 +2,55 @@ package ru.ifmo.rain.varfolomeev.bank;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
+import java.rmi.NoSuchObjectException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 public class Server {
     private final static int DEFAULT_PORT = 8080;
+    private Bank bank;
 
     public void start() {
-        Bank bank = new RemoteBank();
+        if (bank != null) {
+            throw new IllegalStateException("Bank is already bound");
+        }
+        bank = new RemoteBank();
+        System.out.print("Starting Server: ");
         try {
             UnicastRemoteObject.exportObject(bank, DEFAULT_PORT);
             Naming.rebind("//localhost/bank", bank);
+            System.out.println("OK");
         } catch (RemoteException e) {
-            System.out.println("Cannot export object: " +
-                    e.getMessage());
+            System.out.println("Cannot export object: " + e.getMessage());
         } catch (MalformedURLException e) {
             System.out.println("Malformed URL");
+        }
+    }
+
+    public Bank getBank() {
+        return bank;
+    }
+
+    public void close() {
+        try {
+            bank.close();
+        } catch (RemoteException ignored) {
+            //
+        }
+        try {
+            Naming.unbind("//localhost/bank");
+        } catch (RemoteException e) {
+            System.out.println("Registry could not be contacted");
+        } catch (NotBoundException e) {
+            System.out.println("Bank is not bound");
+        } catch (MalformedURLException e) {
+            System.out.println("Malformed URL");
+        }
+        try {
+            UnicastRemoteObject.unexportObject(bank, true);
+        } catch (NoSuchObjectException e) {
+            System.out.println("Bank is not bound");
         }
     }
 }
