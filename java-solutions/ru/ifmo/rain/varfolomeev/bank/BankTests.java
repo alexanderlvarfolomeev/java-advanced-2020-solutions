@@ -80,7 +80,6 @@ public class BankTests {
         assertEquals(local.getFirstName(), firstName);
         assertEquals(local.getLastName(), lastName);
         assertEquals(local.getPassportId(), passport);
-        assertNotNull(null);
     }
 
     @Test
@@ -245,13 +244,20 @@ public class BankTests {
 
     @Test
     public void test11_checkIncorrectPersonRegistration() throws RemoteException {
+        int exceptionCount = 0;
+        exceptionCount += checkRegister(null, null, null);
+        exceptionCount += checkRegister(null, "Varfolomeev", "test11");
+        exceptionCount += checkRegister("Alexander", "Varfolomeev", null);
+        assertEquals(3, exceptionCount);
+    }
+
+    private int checkRegister(String firstName, String lastName, String passportId) throws RemoteException {
         try {
-            bank.registerPerson(null, null, null);
-            bank.registerPerson(null, "Varfolomeev", "test11");
-            bank.registerPerson("Alexander", "Varfolomeev", null);
+            bank.registerPerson(firstName, lastName, passportId);
         } catch (NullPointerException ignored) {
-            //
+            return 1;
         }
+        return 0;
     }
 
     @Test
