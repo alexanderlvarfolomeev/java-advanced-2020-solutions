@@ -249,7 +249,7 @@ public class BankTests {
             try {
                 method.invoke(bank, os);
             } catch (IllegalAccessException e) {
-                return false;
+                throw new AssertionError(e);
             } catch (InvocationTargetException e) {
                 if (e.getTargetException() instanceof RemoteException) {
                     throw new AssertionError(e.getTargetException());
