@@ -6,6 +6,7 @@ import org.junit.runners.JUnit4;
 import org.junit.runners.MethodSorters;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NoSuchObjectException;
@@ -15,6 +16,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
@@ -242,72 +244,47 @@ public class BankTests {
         Client.main(new String[]{"Alexander", "Varfolomeev", "test10", "1", "abc"});
     }
 
-    @Test
-    public void test11_checkIncorrectPersonRegistration() throws RemoteException {
-        int exceptionCount = 0;
-        exceptionCount += checkRegister(null, null, null);
-        exceptionCount += checkRegister(null, "Varfolomeev", "test11");
-        exceptionCount += checkRegister("Alexander", "Varfolomeev", null);
-        assertEquals(3, exceptionCount);
-    }
-
-    private int checkRegister(String firstName, String lastName, String passportId) throws RemoteException {
-        try {
-            bank.registerPerson(firstName, lastName, passportId);
-        } catch (NullPointerException ignored) {
-            return 1;
-        }
-        return 0;
-    }
-
-    @Test
-    public void test12_checkIncorrectPersonGetting() throws RemoteException {
-        try {
-            bank.getPersonByPassportId(null, Bank.PersonType.REMOTE);
-            bank.getPersonByPassportId("test12", null);
-        } catch (NullPointerException ignored) {
-            //
-        }
+    private void testIncorrectParameters(Method method, Object[][] parameters) {
+        assertTrue(Arrays.stream(parameters).allMatch(os -> {
+            try {
+                method.invoke(bank, os);
+            } catch (IllegalAccessException e) {
+                return false;
+            } catch (InvocationTargetException e) {
+                if (e.getTargetException() instanceof RemoteException) {
+                    throw new AssertionError(e.getTargetException());
+                }
+                return true;
+            }
+            return false;
+        }));
     }
 
     @Test
-    public void test13_checkIncorrectAccountCreation() throws RemoteException {
+    public void test11_checkIncorrectPersonRegistration() throws NoSuchMethodException {
+        testIncorrectParameters(Bank.class.getDeclaredMethod("registerPerson", String.class, String.class, String.class),
+                new Object[][]{{null, null, null}, {null, "Varfolomeev", "test11"}, {"Alexander", "Varfolomeev", null}});
+    }
+
+    @Test
+    public void test12_checkIncorrectPersonGetting() throws NoSuchMethodException {
+        testIncorrectParameters(Bank.class.getDeclaredMethod("getPersonByPassportId", String.class, Bank.PersonType.class),
+                new Object[][]{{null, Bank.PersonType.REMOTE}, {"test12", null}});
+    }
+
+    @Test
+    public void test13_checkIncorrectAccountCreation() throws RemoteException, NoSuchMethodException {
         String passportId = "test13";
         bank.registerPerson(passportId, passportId, passportId);
-        try {
-            bank.createAccount(null);
-        } catch (NullPointerException ignored) {
-            //
-        }
-        try {
-            bank.createAccount("");
-            bank.createAccount("1");
-            bank.createAccount("1:1:1");
-            bank.createAccount(":");
-            bank.createAccount("::");
-            bank.createAccount("::::::");
-        } catch (IllegalArgumentException ignored) {
-            //
-        }
+        testIncorrectParameters(Bank.class.getDeclaredMethod("createAccount", String.class),
+                new Object[][]{{null}, {""}, {"1"}, {"1:1:1"}, {":"}, {"::"}, {"::::::"}});
+
     }
 
     @Test
-    public void test14_checkIncorrectAccountGetting() throws RemoteException {
-        try {
-            bank.getAccount(null);
-        } catch (NullPointerException ignored) {
-            //
-        }
-        try {
-            bank.getAccount("");
-            bank.getAccount("1");
-            bank.getAccount("1:1:1");
-            bank.getAccount(":");
-            bank.getAccount("::");
-            bank.getAccount("::::::");
-        } catch (IllegalArgumentException ignored) {
-            //
-        }
+    public void test14_checkIncorrectAccountGetting() throws NoSuchMethodException {
+        testIncorrectParameters(Bank.class.getDeclaredMethod("getAccount", String.class),
+                new Object[][]{{null}, {""}, {"1"}, {"1:1:1"}, {":"}, {"::"}, {"::::::"}});
     }
 
     private void test() {
