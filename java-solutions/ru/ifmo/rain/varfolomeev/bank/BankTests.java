@@ -16,7 +16,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
@@ -27,11 +26,13 @@ import static org.junit.Assert.*;
 @RunWith(JUnit4.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BankTests {
+    private static final int MULTIPLE_TEST_COUNT = 1000;
+    private static final String PERSON_FIRST_NAME = "Alexander";
+    private static final String PERSON_LAST_NAME = "Varfolomeev";
+
     private static Bank bank;
     private static Server SERVER = new Server();
     private static Registry registry;
-
-    private static final int MULTIPLE_TEST_COUNT = 1000;
 
 
     @BeforeClass
@@ -65,93 +66,116 @@ public class BankTests {
 
     @Test
     public void test01_checkPersonRegistration() throws RemoteException {
-        String passport = "test01";
-        String firstName = "Alexander";
-        String lastName = "Varfolomeev";
-        bank.registerPerson(firstName, lastName, passport);
+        String passportId = "test01";
+        bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId);
 
-        Person remote = bank.getPersonByPassportId(passport, Bank.PersonType.REMOTE);
-        Person local = bank.getPersonByPassportId(passport, Bank.PersonType.LOCAL);
+        Person remotePerson = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
+        Person localPerson = bank.getPersonByPassportId(passportId, Bank.PersonType.LOCAL);
 
-        assertNotNull(remote);
-        assertEquals(remote.getFirstName(), firstName);
-        assertEquals(remote.getLastName(), lastName);
-        assertEquals(remote.getPassportId(), passport);
+        assertNotNull(remotePerson);
+        assertEquals(remotePerson.getFirstName(), PERSON_FIRST_NAME);
+        assertEquals(remotePerson.getLastName(), PERSON_LAST_NAME);
+        assertEquals(remotePerson.getPassportId(), passportId);
 
-        assertNotNull(local);
-        assertEquals(local.getFirstName(), firstName);
-        assertEquals(local.getLastName(), lastName);
-        assertEquals(local.getPassportId(), passport);
+        assertNotNull(localPerson);
+        assertEquals(localPerson.getFirstName(), PERSON_FIRST_NAME);
+        assertEquals(localPerson.getLastName(), PERSON_LAST_NAME);
+        assertEquals(localPerson.getPassportId(), passportId);
     }
 
     @Test
     public void test02_checkAccountCreation() throws RemoteException {
-        String passport = "test02";
-        bank.registerPerson(passport, passport, passport);
+        String passportId = "test02";
+        bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId);
 
         bank.createAccount("test02:1");
 
-        Person remote = bank.getPersonByPassportId(passport, Bank.PersonType.REMOTE);
-        Person local = bank.getPersonByPassportId(passport, Bank.PersonType.LOCAL);
-        assertNotNull(local.getAccounts().get("1"));
-        assertNotNull(remote.getAccounts().get("1"));
+        Person remotePerson = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
+        Person localPerson = bank.getPersonByPassportId(passportId, Bank.PersonType.LOCAL);
+        assertNotNull(localPerson.getAccount("1"));
+        assertNotNull(remotePerson.getAccount("1"));
     }
 
     @Test
-    public void test03_runClient() {
-        System.out.println(String.format("run Client:%n================================="));
-        Client.main(new String[]{"Alexander", "Varfolomeev", "test03", "1", "100"});
+    public void test03_testClient() throws RemoteException {
+        System.out.println(String.format("test Client:%n================================="));
+
+        assertNull(bank.getPersonByPassportId("test03", Bank.PersonType.REMOTE));
+        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "1", "100"});
+        Person person = bank.getPersonByPassportId("test03", Bank.PersonType.REMOTE);
+        assertNotNull(person);
+        assertEquals(PERSON_FIRST_NAME, person.getFirstName());
+        assertEquals(PERSON_LAST_NAME, person.getLastName());
+        assertEquals("test03", person.getPassportId());
+        assertNotNull(bank.getAccount("test03:1"));
+        assertEquals(100, bank.getAccount("test03:1").getAmount());
+
+        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "1", Integer.toString(Integer.MIN_VALUE)});
+        assertEquals(-2147483548, bank.getAccount("test03:1").getAmount());
+        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "1", Integer.toString(Integer.MAX_VALUE)});
+        assertEquals(99, bank.getAccount("test03:1").getAmount());
+
+        assertNull(bank.getAccount("test03:2"));
+        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "2", Integer.toString(Integer.MAX_VALUE)});
+        assertNotNull(bank.getAccount("test03:2"));
+        assertEquals(Integer.MAX_VALUE, bank.getAccount("test03:2").getAmount());
+
+        assertNull(bank.getAccount("test03:3"));
+        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "3", Integer.toString(Integer.MIN_VALUE)});
+        assertNotNull(bank.getAccount("test03:3"));
+        assertEquals(Integer.MIN_VALUE, bank.getAccount("test03:3").getAmount());
     }
 
     @Test
     public void test04_checkDoRemoteSeeChanges() throws RemoteException {
-        String passport = "test04";
-        bank.registerPerson(passport, passport, passport);
+        String passportId = "test04";
+        bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId);
 
-        Person remote1 = bank.getPersonByPassportId(passport, Bank.PersonType.REMOTE);
-        Person remote2 = bank.getPersonByPassportId(passport, Bank.PersonType.REMOTE);
+        Person remotePerson1 = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
+        Person remotePerson2 = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
 
-        bank.createAccount(passport + ":1");
+        bank.createAccount(passportId + ":1");
+        assertEquals(1, remotePerson1.getAccounts().size());
+        assertEquals(1, remotePerson2.getAccounts().size());
 
-        assertEquals(1, remote1.getAccounts().size());
-        assertEquals(1, remote2.getAccounts().size());
-        assertEquals(remote1.getAccounts().get("1").getId(), remote2.getAccounts().get("1").getId());
+        remotePerson1.getAccount("1").setAmount(100);
+        assertEquals(remotePerson1.getAccount("1").getAmount(), remotePerson2.getAccount("1").getAmount());
     }
 
     @Test
     public void test05_checkDoLocalNotSeeNextRemoteChanges() throws RemoteException {
-        String passport = "test05";
-        bank.registerPerson(passport, passport, passport);
+        String passportId = "test05";
+        bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId);
 
-        Person local1 = bank.getPersonByPassportId(passport, Bank.PersonType.LOCAL);
-        Person local2 = bank.getPersonByPassportId(passport, Bank.PersonType.LOCAL);
+        Person localPerson1 = bank.getPersonByPassportId(passportId, Bank.PersonType.LOCAL);
+        Person localPerson2 = bank.getPersonByPassportId(passportId, Bank.PersonType.LOCAL);
 
-        bank.createAccount(passport + ":1");
-        bank.createAccount(passport + ":2");
+        bank.createAccount(passportId + ":1");
+        bank.createAccount(passportId + ":2");
 
-        assertEquals(0, local1.getAccounts().size());
-        assertEquals(0, local2.getAccounts().size());
+        assertEquals(0, localPerson1.getAccounts().size());
+        assertEquals(0, localPerson2.getAccounts().size());
 
-        Person local3 = bank.getPersonByPassportId(passport, Bank.PersonType.LOCAL);
+        Person localPerson3 = bank.getPersonByPassportId(passportId, Bank.PersonType.LOCAL);
 
-        assertEquals(0, local1.getAccounts().size());
-        assertEquals(2, local3.getAccounts().size());
+        assertEquals(0, localPerson1.getAccounts().size());
+        assertEquals(2, localPerson3.getAccounts().size());
     }
 
     @Test
     public void test06_checkRemoteCantSeeLocalChanges() throws RemoteException {
-        String passport = "test06";
-        bank.registerPerson(passport, passport, passport);
-        Person remote = bank.getPersonByPassportId(passport, Bank.PersonType.REMOTE);
+        String passportId = "test06";
+        bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId);
+        Person remotePerson = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
 
-        bank.createAccount(passport + ":1");
+        bank.createAccount(passportId + ":1");
 
-        Person local = bank.getPersonByPassportId(passport, Bank.PersonType.LOCAL);
+        Person localPerson = bank.getPersonByPassportId(passportId, Bank.PersonType.LOCAL);
 
-        Account localAccount = local.getAccounts().get("1");
+        Account localAccount = localPerson.getAccount("1");
         localAccount.setAmount(localAccount.getAmount() + 100);
 
-        Account remoteAccount = remote.getAccounts().get("1");
+        Account remoteAccount = remotePerson.getAccount("1");
 
         assertEquals(100, localAccount.getAmount());
         assertEquals(0, remoteAccount.getAmount());
@@ -159,22 +183,22 @@ public class BankTests {
 
     @Test
     public void test07_checkDoLocalSeePreviousRemoteChanges() throws RemoteException {
-        String passport = "test07";
-        bank.registerPerson(passport, passport, passport);
-        Person remote = bank.getPersonByPassportId(passport, Bank.PersonType.REMOTE);
+        String passportId = "test07";
+        bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId);
+        Person remotePerson = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
 
-        bank.createAccount(passport + ":1");
+        bank.createAccount(passportId + ":1");
 
-        Account remoteAccount = remote.getAccounts().get("1");
+        Account remoteAccount = remotePerson.getAccount("1");
 
-        Person local1 = bank.getPersonByPassportId(passport, Bank.PersonType.LOCAL);
+        Person localPerson1 = bank.getPersonByPassportId(passportId, Bank.PersonType.LOCAL);
 
         remoteAccount.setAmount(remoteAccount.getAmount() + 100);
 
-        Person local2 = bank.getPersonByPassportId(passport, Bank.PersonType.LOCAL);
+        Person localPerson2 = bank.getPersonByPassportId(passportId, Bank.PersonType.LOCAL);
 
-        Account localAccount1 = local1.getAccounts().get("1");
-        Account localAccount2 = local2.getAccounts().get("1");
+        Account localAccount1 = localPerson1.getAccount("1");
+        Account localAccount2 = localPerson2.getAccount("1");
 
         assertEquals(localAccount2.getAmount(), remoteAccount.getAmount());
         assertEquals(localAccount1.getAmount() + 100, localAccount2.getAmount());
@@ -183,7 +207,7 @@ public class BankTests {
     @Test
     public void test08_checkParallelAccountCreation() throws RemoteException {
         String passportId = "test08";
-        bank.registerPerson(passportId, passportId, passportId);
+        bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId);
         Person person = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
         int threadCount = Runtime.getRuntime().availableProcessors();
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
@@ -239,9 +263,9 @@ public class BankTests {
     public void test10_runClientIncorrectly() {
         Client.main(null);
         Client.main(new String[]{null, null, null, null, null});
-        Client.main(new String[]{"Alexander", "Varfolomeev", "test10", "1", null});
-        Client.main(new String[]{"Alexander", "Varfolomeev", "test10", "1", "-1_000_000_000_000_000"});
-        Client.main(new String[]{"Alexander", "Varfolomeev", "test10", "1", "abc"});
+        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test10", "1", null});
+        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test10", "1", "-1_000_000_000_000_000"});
+        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test10", "1", "abc"});
     }
 
     private void testIncorrectParameters(Method method, Object[][] parameters) {
@@ -263,7 +287,7 @@ public class BankTests {
     @Test
     public void test11_checkIncorrectPersonRegistration() throws NoSuchMethodException {
         testIncorrectParameters(Bank.class.getDeclaredMethod("registerPerson", String.class, String.class, String.class),
-                new Object[][]{{null, null, null}, {null, "Varfolomeev", "test11"}, {"Alexander", "Varfolomeev", null}});
+                new Object[][]{{null, null, null}, {null, PERSON_LAST_NAME, "test11"}, {PERSON_FIRST_NAME, PERSON_LAST_NAME, null}});
     }
 
     @Test
@@ -304,7 +328,6 @@ public class BankTests {
             new BankTests().test();
         } finally {
             afterClass();
-
         }
     }
 }

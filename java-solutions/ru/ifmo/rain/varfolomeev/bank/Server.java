@@ -33,6 +33,7 @@ public class Server {
     }
 
     public void close() {
+        System.out.print("Closing Server.");
         try {
             bank.close();
         } catch (RemoteException ignored) {

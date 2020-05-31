@@ -52,10 +52,10 @@ public class Client {
         } else {
             System.out.println("Account already exists");
         }
-        int oldAmount = person.getAmount(accountId);
+        int oldAmount = person.getAccount(accountId).getAmount();
         System.out.println("Money: " + oldAmount);
         account.addAmount(amountChange);
-        int newAmount = person.getAmount(accountId);
+        int newAmount = person.getAccount(accountId).getAmount();
         System.out.println("Money: " + newAmount);
         System.out.println(
                 oldAmount + amountChange == newAmount ? "Amount has been changed" : "Amount hasn't been changed");

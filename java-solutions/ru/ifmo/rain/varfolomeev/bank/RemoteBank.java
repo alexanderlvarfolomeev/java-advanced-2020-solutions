@@ -1,7 +1,6 @@
 package ru.ifmo.rain.varfolomeev.bank;
 
 import java.rmi.NoSuchObjectException;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
@@ -49,10 +48,9 @@ class RemoteBank implements Bank {
         if (person == null) {
             return null;
         }
-        if (personType == PersonType.LOCAL) {
-            person = new LocalPerson(person.getFirstName(), person.getLastName(), person.getPassportId(), convertAccountsToLocal(person.getAccounts()));
-        }
-        return person;
+        return personType == PersonType.REMOTE ? person : new LocalPerson(
+                person.getFirstName(), person.getLastName(),
+                person.getPassportId(), convertAccountsToLocal(person.getAccounts()));
     }
 
     private static Map<String, Account> convertAccountsToLocal(Map<String, Account> accounts) {
@@ -68,12 +66,11 @@ class RemoteBank implements Bank {
     @Override
     public Person registerPerson(String firstName, String lastName, String passportId) throws RemoteException {
         checkNonNull(firstName, lastName, passportId);
-        Person person = getPersonByPassportId(passportId, PersonType.REMOTE);
-        if (person != null) {
+        if (getPersonByPassportId(passportId, PersonType.REMOTE) != null) {
             throw new UnsupportedOperationException("Person is already registered");
         }
         try {
-            person = new RemotePerson(lastName, firstName, passportId, new ConcurrentHashMap<>());
+            Person person = new RemotePerson(lastName, firstName, passportId, new ConcurrentHashMap<>());
             persons.put(passportId, person);
             return person;
         } catch (RemoteException e) {

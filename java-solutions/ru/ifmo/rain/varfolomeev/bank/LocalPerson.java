@@ -3,7 +3,6 @@ package ru.ifmo.rain.varfolomeev.bank;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 public class LocalPerson implements Serializable, Person {
     private final String firstName;
@@ -38,26 +37,15 @@ public class LocalPerson implements Serializable, Person {
         return accounts;
     }
 
-    @Override
     public void setAmount(String accountId, int amount) throws RemoteException {
-        getAccountIfExists(accountId).setAmount(amount);
+        getAccount(accountId).setAmount(amount);
     }
 
-    @Override
     public void addAmount(String accountId, int amount) throws RemoteException {
-        getAccountIfExists(accountId).addAmount(amount);
+        getAccount(accountId).addAmount(amount);
     }
 
-    @Override
     public int getAmount(String accountId) throws RemoteException {
-        return getAccountIfExists(accountId).getAmount();
-    }
-
-    private Account getAccountIfExists(String accountId) {
-        Account account = getAccounts().get(accountId);
-        if (account == null) {
-            throw new NoSuchElementException("There is no account with such ID");
-        }
-        return account;
+        return getAccount(accountId).getAmount();
     }
 }
