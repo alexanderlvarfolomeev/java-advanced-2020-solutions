@@ -8,19 +8,19 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 public class Server {
-    private final static int DEFAULT_PORT = 8080;
+    private final static int DEFAULT_PORT = 8888;
     private Bank bank;
 
     public void start() {
         if (bank != null) {
             throw new IllegalStateException("Bank is already bound");
         }
-        bank = new RemoteBank();
+        bank = new RemoteBank(DEFAULT_PORT);
         System.out.print("Starting Server: ");
         try {
             UnicastRemoteObject.exportObject(bank, DEFAULT_PORT);
             Naming.rebind("//localhost/bank", bank);
-            System.out.println("OK");
+            System.out.println("Server started");
         } catch (RemoteException e) {
             System.out.println("Cannot export object: " + e.getMessage());
         } catch (MalformedURLException e) {

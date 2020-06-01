@@ -1,29 +1,16 @@
 package ru.ifmo.rain.varfolomeev.bank;
 
 import java.io.Serializable;
+import java.rmi.RemoteException;
 
-public class LocalAccount implements Serializable, Account {
-    private final String id;
-    private int amount;
+public class LocalAccount extends AbstractAccount {
 
     LocalAccount(String id) {
-        this(id, 0);
+        super(id, 0);
     }
 
     LocalAccount(String id, int amount) {
-        this.amount = amount;
-        this.id = id;
-    }
+        super(id, amount);
 
-    public String getId() {
-        return id;
-    }
-
-    public int getAmount() {
-        return amount;
-    }
-
-    public void setAmount(int amount) {
-        this.amount = amount;
     }
 }

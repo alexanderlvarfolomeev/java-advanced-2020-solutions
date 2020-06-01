@@ -5,13 +5,11 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface Account extends Remote {
-    public String getId() throws RemoteException;
+    String getId() throws RemoteException;
 
-    public int getAmount() throws RemoteException;
+    int getAmount() throws RemoteException;
 
-    public void setAmount(int amount) throws RemoteException;
+    void setAmount(int amount) throws RemoteException;
 
-    default void addAmount(int amount) throws RemoteException {
-        setAmount(getAmount() + amount);
-    }
+    void addAmount(int amount) throws RemoteException;
 }

@@ -56,9 +56,9 @@ public class Client {
         System.out.println("Money: " + oldAmount);
         account.addAmount(amountChange);
         int newAmount = person.getAccount(accountId).getAmount();
-        System.out.println("Money: " + newAmount);
-        System.out.println(
-                oldAmount + amountChange == newAmount ? "Amount has been changed" : "Amount hasn't been changed");
+        System.out.println("New Money: " + newAmount);
+        System.out.println(oldAmount + amountChange == newAmount && !(amountChange == 0) ?
+                "Amount has been changed" : "Amount hasn't been changed");
     }
 
     private static int getIntArgument(String argumentName, String stringArgument) throws NumberFormatException {

@@ -16,9 +16,12 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
+import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
@@ -26,7 +29,7 @@ import static org.junit.Assert.*;
 @RunWith(JUnit4.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BankTests {
-    private static final int MULTIPLE_TEST_COUNT = 1000;
+    private static final int MULTIPLE_TEST_COUNT = 10000;
     private static final String PERSON_FIRST_NAME = "Alexander";
     private static final String PERSON_LAST_NAME = "Varfolomeev";
 
@@ -96,12 +99,16 @@ public class BankTests {
         assertNotNull(remotePerson.getAccount("1"));
     }
 
+    private void runClient(int testNumber, String[] args) {
+        System.out.println(String.format("test Client #%d:%n=================================", testNumber));
+        Client.main(args);
+        System.out.println();
+    }
+
     @Test
     public void test03_testClient() throws RemoteException {
-        System.out.println(String.format("test Client:%n================================="));
-
         assertNull(bank.getPersonByPassportId("test03", Bank.PersonType.REMOTE));
-        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "1", "100"});
+        runClient(1, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "1", "100"});
         Person person = bank.getPersonByPassportId("test03", Bank.PersonType.REMOTE);
         assertNotNull(person);
         assertEquals(PERSON_FIRST_NAME, person.getFirstName());
@@ -110,20 +117,25 @@ public class BankTests {
         assertNotNull(bank.getAccount("test03:1"));
         assertEquals(100, bank.getAccount("test03:1").getAmount());
 
-        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "1", Integer.toString(Integer.MIN_VALUE)});
+        runClient(2, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "1", Integer.toString(Integer.MIN_VALUE)});
         assertEquals(-2147483548, bank.getAccount("test03:1").getAmount());
-        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "1", Integer.toString(Integer.MAX_VALUE)});
+        runClient(3, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "1", Integer.toString(Integer.MAX_VALUE)});
         assertEquals(99, bank.getAccount("test03:1").getAmount());
 
         assertNull(bank.getAccount("test03:2"));
-        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "2", Integer.toString(Integer.MAX_VALUE)});
+        runClient(4, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "2", Integer.toString(Integer.MAX_VALUE)});
         assertNotNull(bank.getAccount("test03:2"));
         assertEquals(Integer.MAX_VALUE, bank.getAccount("test03:2").getAmount());
 
         assertNull(bank.getAccount("test03:3"));
-        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "3", Integer.toString(Integer.MIN_VALUE)});
+        runClient(5, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "3", Integer.toString(Integer.MIN_VALUE)});
         assertNotNull(bank.getAccount("test03:3"));
         assertEquals(Integer.MIN_VALUE, bank.getAccount("test03:3").getAmount());
+
+        assertNull(bank.getAccount("test03:4"));
+        runClient(6, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "4", Integer.toString(0)});
+        assertNotNull(bank.getAccount("test03:4"));
+        assertEquals(0, bank.getAccount("test03:4").getAmount());
     }
 
     @Test
@@ -205,25 +217,36 @@ public class BankTests {
     }
 
     @Test
-    public void test08_checkParallelAccountCreation() throws RemoteException {
+    public void test08_checkLocalAmountChanges() throws RemoteException {
         String passportId = "test08";
         bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId);
-        Person person = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
-        int threadCount = Runtime.getRuntime().availableProcessors();
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        Person remotePerson = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
+        LocalPerson localPerson = (LocalPerson) bank.getPersonByPassportId(passportId, Bank.PersonType.LOCAL);
+
+        bank.createAccount(passportId + ":1");
+        assertNotNull(remotePerson.getAccount("1"));
+        assertNull(localPerson.getAccount("1"));
+
+        Account localAccount = localPerson.createAccount("1");
+        localAccount.addAmount(100);
+
+        assertEquals(0, remotePerson.getAccount("1").getAmount());
+        assertEquals(100, localPerson.getAccount("1").getAmount());
+
+    }
+
+    private void runOperationParallel(IntFunction<Runnable> operation) {
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         try {
             Phaser phaser = new Phaser(MULTIPLE_TEST_COUNT);
             IntStream.range(0, MULTIPLE_TEST_COUNT).forEach(i -> executorService.submit(() -> {
                 try {
-                    bank.createAccount(passportId + ":" + i);
-                } catch (RemoteException e) {
-                    throw new AssertionError(e);
+                    operation.apply(i).run();
                 } finally {
                     phaser.arrive();
                 }
             }));
-            phaser.arriveAndAwaitAdvance();
-            assertEquals(MULTIPLE_TEST_COUNT, person.getAccounts().size());
+            phaser.awaitAdvance(0);
         } finally {
             executorService.shutdownNow();
         }
@@ -232,40 +255,60 @@ public class BankTests {
     @Test
     public void test09_checkParallelPersonRegistration() {
         String passportId = "test09";
-        int threadCount = Runtime.getRuntime().availableProcessors();
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-        try {
-            Phaser phaser = new Phaser(MULTIPLE_TEST_COUNT);
-            IntStream.range(0, MULTIPLE_TEST_COUNT).forEach(i -> executorService.submit(() -> {
-                try {
-                    String currentPassportId = passportId + i;
-                    bank.registerPerson(currentPassportId, currentPassportId, currentPassportId);
-                } catch (RemoteException e) {
-                    throw new AssertionError(e);
-                } finally {
-                    phaser.arrive();
-                }
-            }));
-            phaser.arriveAndAwaitAdvance();
-            IntStream.range(0, MULTIPLE_TEST_COUNT).forEach(i -> {
-                try {
-                    assertNotNull(bank.getPersonByPassportId(passportId + i, Bank.PersonType.LOCAL));
-                } catch (RemoteException e) {
-                    throw new AssertionError(e);
-                }
-            });
-        } finally {
-            executorService.shutdownNow();
-        }
+        runOperationParallel(i -> () -> {
+            try {
+                bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId + i);
+            } catch (RemoteException ignored) {
+                //
+            }
+        });
+        IntStream.range(0, MULTIPLE_TEST_COUNT).forEach(i -> {
+            try {
+                assertNotNull(bank.getPersonByPassportId(passportId + i, Bank.PersonType.LOCAL));
+            } catch (RemoteException e) {
+                throw new AssertionError(e);
+            }
+        });
     }
 
     @Test
-    public void test10_runClientIncorrectly() {
-        Client.main(null);
-        Client.main(new String[]{null, null, null, null, null});
-        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test10", "1", null});
-        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test10", "1", "-1_000_000_000_000_000"});
-        Client.main(new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test10", "1", "abc"});
+    public void test10_checkParallelAccountCreation() throws RemoteException {
+        String passportId = "test10";
+        bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId);
+        Person person = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
+        runOperationParallel(i -> () -> {
+            try {
+                bank.createAccount(passportId + ":" + i);
+            } catch (RemoteException ignored) {
+                //
+            }
+        });
+        assertEquals(MULTIPLE_TEST_COUNT, person.getAccounts().size());
+    }
+
+    @Test
+    public void test11_checkParallelAmountAdding() throws RemoteException {
+        String passportId = "test11";
+        bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId);
+        Person person = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
+        Account account = bank.createAccount(passportId + ":1");
+        runOperationParallel(i -> () -> {
+            try {
+                account.addAmount(1);
+            } catch (RemoteException ignored) {
+                //
+            }
+        });
+        assertEquals(MULTIPLE_TEST_COUNT, account.getAmount());
+    }
+
+    @Test
+    public void test12_runClientIncorrectly() {
+        runClient(1, null);
+        runClient(2, new String[]{null, null, null, null, null});
+        runClient(3, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test10", "1", null});
+        runClient(4, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test10", "1", "-1_000_000_000_000_000"});
+        runClient(5, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test10", "1", "abc"});
     }
 
     private void testIncorrectParameters(Method method, Object[][] parameters) {
@@ -285,30 +328,30 @@ public class BankTests {
     }
 
     @Test
-    public void test11_checkIncorrectPersonRegistration() throws NoSuchMethodException {
+    public void test13_checkIncorrectPersonRegistration() throws NoSuchMethodException {
         testIncorrectParameters(Bank.class.getDeclaredMethod("registerPerson", String.class, String.class, String.class),
                 new Object[][]{{null, null, null}, {null, PERSON_LAST_NAME, "test11"}, {PERSON_FIRST_NAME, PERSON_LAST_NAME, null}});
     }
 
     @Test
-    public void test12_checkIncorrectPersonGetting() throws NoSuchMethodException {
+    public void test14_checkIncorrectPersonGetting() throws NoSuchMethodException {
         testIncorrectParameters(Bank.class.getDeclaredMethod("getPersonByPassportId", String.class, Bank.PersonType.class),
                 new Object[][]{{null, Bank.PersonType.REMOTE}, {"test12", null}});
     }
 
     @Test
-    public void test13_checkIncorrectAccountCreation() throws RemoteException, NoSuchMethodException {
+    public void test15_checkIncorrectAccountCreation() throws RemoteException, NoSuchMethodException {
         String passportId = "test13";
         bank.registerPerson(passportId, passportId, passportId);
         testIncorrectParameters(Bank.class.getDeclaredMethod("createAccount", String.class),
-                new Object[][]{{null}, {""}, {"1"}, {"1:1:1"}, {":"}, {"::"}, {"::::::"}});
+                new Object[][]{{null}, {""}, {"1"}, {"1:"}, {"1:1:1"}, {":"}, {"::"}, {"::::::"}});
 
     }
 
     @Test
-    public void test14_checkIncorrectAccountGetting() throws NoSuchMethodException {
+    public void test16_checkIncorrectAccountGetting() throws NoSuchMethodException {
         testIncorrectParameters(Bank.class.getDeclaredMethod("getAccount", String.class),
-                new Object[][]{{null}, {""}, {"1"}, {"1:1:1"}, {":"}, {"::"}, {"::::::"}});
+                new Object[][]{{null}, {""}, {"1"}, {"1:"}, {"1:1:1"}, {":"}, {"::"}, {"::::::"}});
     }
 
     private void test() {

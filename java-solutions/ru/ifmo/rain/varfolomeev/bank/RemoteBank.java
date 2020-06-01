@@ -5,29 +5,35 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 class RemoteBank implements Bank {
+    private final int port;
     private final Map<String, Person> persons;
 
-    public RemoteBank() {
+    public RemoteBank(int port) {
+        this.port = port;
         persons = new ConcurrentHashMap<>();
     }
 
     @Override
     public Account createAccount(String id) throws RemoteException {
         checkNonNull(id);
-        Account account = getAccount(id);
-        if (account != null) {
-            throw new UnsupportedOperationException("Account already exists");
-        }
-        account = new RemoteAccount(id);
         Map.Entry<String, String> ids = getPassportAndAccountId(id);
-        persons.get(ids.getKey()).getAccounts().put(ids.getValue(), account);
-        return account;
+        Person person = getPersonByPassportId(ids.getKey(), PersonType.REMOTE);
+        if (person == null) {
+            return null;
+        }
+        Account account = new RemoteAccount(ids.getValue());
+        Account previousAccount = person.getAccounts().putIfAbsent(ids.getValue(), account);
+        if (previousAccount == null) {
+            UnicastRemoteObject.exportObject(account, port);
+            return account;
+        } else {
+            return previousAccount;
+        }
     }
 
     @Override
@@ -36,7 +42,7 @@ class RemoteBank implements Bank {
         Map.Entry<String, String> ids = getPassportAndAccountId(id);
         Person person = persons.get(ids.getKey());
         if (person == null) {
-            throw new NoSuchElementException("Can't find the person: " + ids.getKey());
+            return null;
         }
         return persons.get(ids.getKey()).getAccounts().get(ids.getValue());
     }
@@ -66,15 +72,13 @@ class RemoteBank implements Bank {
     @Override
     public Person registerPerson(String firstName, String lastName, String passportId) throws RemoteException {
         checkNonNull(firstName, lastName, passportId);
-        if (getPersonByPassportId(passportId, PersonType.REMOTE) != null) {
-            throw new UnsupportedOperationException("Person is already registered");
-        }
-        try {
-            Person person = new RemotePerson(lastName, firstName, passportId, new ConcurrentHashMap<>());
-            persons.put(passportId, person);
+        Person person = new RemotePerson(lastName, firstName, passportId);
+        Person previousPerson = persons.putIfAbsent(passportId, person);
+        if (previousPerson == null) {
+            UnicastRemoteObject.exportObject(person, port);
             return person;
-        } catch (RemoteException e) {
-            throw new RemoteException("Unable to export new RemotePerson instance", e);
+        } else {
+            return previousPerson;
         }
     }
 
