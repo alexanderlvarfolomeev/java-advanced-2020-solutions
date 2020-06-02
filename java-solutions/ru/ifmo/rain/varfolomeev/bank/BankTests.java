@@ -362,7 +362,7 @@ public class BankTests {
 
     public static void main(String[] args) {
         Result result = new JUnitCore().run(BankTests.class);
-        System.out.println(String.format("==========================%nFailures: %d, Success: %d, Skipped: %d%n",
+        System.out.println(String.format("%n==========================%nFailures: %d, Success: %d, Skipped: %d%n",
                 result.getFailureCount(), result.getRunCount() - result.getFailureCount(), result.getIgnoreCount()));
         System.exit(result.wasSuccessful() ? 0 : 1);
     }
