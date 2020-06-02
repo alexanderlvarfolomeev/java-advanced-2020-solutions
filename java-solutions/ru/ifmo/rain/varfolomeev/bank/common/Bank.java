@@ -1,8 +1,5 @@
 package ru.ifmo.rain.varfolomeev.bank.common;
 
-import ru.ifmo.rain.varfolomeev.bank.common.accounts.Account;
-import ru.ifmo.rain.varfolomeev.bank.common.persons.Person;
-
 import java.io.Closeable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;

@@ -1,4 +1,4 @@
-package ru.ifmo.rain.varfolomeev.bank.common.persons;
+package ru.ifmo.rain.varfolomeev.bank.server.persons;
 
 import java.util.concurrent.ConcurrentHashMap;
 

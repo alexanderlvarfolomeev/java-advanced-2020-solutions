@@ -1,6 +1,7 @@
-package ru.ifmo.rain.varfolomeev.bank.common.persons;
+package ru.ifmo.rain.varfolomeev.bank.server.persons;
 
-import ru.ifmo.rain.varfolomeev.bank.common.accounts.Account;
+import ru.ifmo.rain.varfolomeev.bank.common.Person;
+import ru.ifmo.rain.varfolomeev.bank.common.Account;
 
 import java.io.Serializable;
 import java.rmi.Remote;

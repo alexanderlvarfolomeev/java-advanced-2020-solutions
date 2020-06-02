@@ -1,7 +1,6 @@
 package ru.ifmo.rain.varfolomeev.bank.server;
 
 import ru.ifmo.rain.varfolomeev.bank.common.Bank;
-import ru.ifmo.rain.varfolomeev.bank.common.RemoteBank;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;

@@ -1,8 +1,8 @@
 package ru.ifmo.rain.varfolomeev.bank.client;
 
 import ru.ifmo.rain.varfolomeev.bank.common.Bank;
-import ru.ifmo.rain.varfolomeev.bank.common.accounts.Account;
-import ru.ifmo.rain.varfolomeev.bank.common.persons.Person;
+import ru.ifmo.rain.varfolomeev.bank.common.Account;
+import ru.ifmo.rain.varfolomeev.bank.common.Person;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;

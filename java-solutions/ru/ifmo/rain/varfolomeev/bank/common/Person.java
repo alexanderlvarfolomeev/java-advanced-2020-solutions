@@ -1,6 +1,4 @@
-package ru.ifmo.rain.varfolomeev.bank.common.persons;
-
-import ru.ifmo.rain.varfolomeev.bank.common.accounts.Account;
+package ru.ifmo.rain.varfolomeev.bank.common;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

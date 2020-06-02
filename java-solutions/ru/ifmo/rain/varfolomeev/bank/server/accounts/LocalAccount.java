@@ -1,4 +1,4 @@
-package ru.ifmo.rain.varfolomeev.bank.common.accounts;
+package ru.ifmo.rain.varfolomeev.bank.server.accounts;
 
 public class LocalAccount extends AbstractAccount {
 

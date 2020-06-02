@@ -1,7 +1,7 @@
-package ru.ifmo.rain.varfolomeev.bank.common.persons;
+package ru.ifmo.rain.varfolomeev.bank.server.persons;
 
-import ru.ifmo.rain.varfolomeev.bank.common.accounts.Account;
-import ru.ifmo.rain.varfolomeev.bank.common.accounts.RemoteAccount;
+import ru.ifmo.rain.varfolomeev.bank.common.Account;
+import ru.ifmo.rain.varfolomeev.bank.server.accounts.RemoteAccount;
 
 import java.rmi.RemoteException;
 import java.util.Map;

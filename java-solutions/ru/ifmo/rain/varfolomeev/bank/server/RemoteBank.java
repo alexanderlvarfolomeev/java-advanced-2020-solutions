@@ -1,11 +1,12 @@
-package ru.ifmo.rain.varfolomeev.bank.common;
+package ru.ifmo.rain.varfolomeev.bank.server;
 
-import ru.ifmo.rain.varfolomeev.bank.common.accounts.Account;
-import ru.ifmo.rain.varfolomeev.bank.common.accounts.LocalAccount;
-import ru.ifmo.rain.varfolomeev.bank.common.accounts.RemoteAccount;
-import ru.ifmo.rain.varfolomeev.bank.common.persons.LocalPerson;
-import ru.ifmo.rain.varfolomeev.bank.common.persons.Person;
-import ru.ifmo.rain.varfolomeev.bank.common.persons.RemotePerson;
+import ru.ifmo.rain.varfolomeev.bank.common.Bank;
+import ru.ifmo.rain.varfolomeev.bank.common.Account;
+import ru.ifmo.rain.varfolomeev.bank.server.accounts.LocalAccount;
+import ru.ifmo.rain.varfolomeev.bank.server.accounts.RemoteAccount;
+import ru.ifmo.rain.varfolomeev.bank.server.persons.LocalPerson;
+import ru.ifmo.rain.varfolomeev.bank.common.Person;
+import ru.ifmo.rain.varfolomeev.bank.server.persons.RemotePerson;
 
 import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
