@@ -1,8 +1,9 @@
-package ru.ifmo.rain.varfolomeev.bank;
+package ru.ifmo.rain.varfolomeev.bank.common.persons;
+
+import ru.ifmo.rain.varfolomeev.bank.common.accounts.Account;
 
 import java.io.Serializable;
 import java.rmi.Remote;
-import java.rmi.RemoteException;
 import java.util.Map;
 
 abstract class AbstractPerson implements Person, Remote, Serializable {

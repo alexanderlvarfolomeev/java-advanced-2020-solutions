@@ -2,7 +2,12 @@ artifacts
 lib
 .idea
 out
-scripts
+scripts/concurr.cmd
+scripts/crawler.cmd
+scripts/hello.cmd
+scripts/impler.cmd
+scripts/mapper.cmd
+scripts/student.cmd
 modules
 java-solutions/info
 java-solutions/Main.java

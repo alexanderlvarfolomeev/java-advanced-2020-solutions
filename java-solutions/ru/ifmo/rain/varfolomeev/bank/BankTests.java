@@ -1,9 +1,17 @@
 package ru.ifmo.rain.varfolomeev.bank;
 
 import org.junit.*;
+import org.junit.runner.JUnitCore;
+import org.junit.runner.Result;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.junit.runners.MethodSorters;
+import ru.ifmo.rain.varfolomeev.bank.client.Client;
+import ru.ifmo.rain.varfolomeev.bank.common.Bank;
+import ru.ifmo.rain.varfolomeev.bank.common.accounts.Account;
+import ru.ifmo.rain.varfolomeev.bank.common.persons.LocalPerson;
+import ru.ifmo.rain.varfolomeev.bank.common.persons.Person;
+import ru.ifmo.rain.varfolomeev.bank.server.Server;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -16,13 +24,10 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
-import java.util.function.Function;
 import java.util.function.IntConsumer;
-import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
@@ -36,16 +41,10 @@ public class BankTests {
 
     private static Bank bank;
     private static Server SERVER = new Server();
-    private static Registry registry;
 
 
     @BeforeClass
     public static void beforeClass() {
-        try {
-            registry = LocateRegistry.createRegistry(1099);
-        } catch (RemoteException e) {
-            throw new AssertionError("Unable to create registry", e);
-        }
         SERVER.start();
         try {
             bank = (Bank) Naming.lookup("//localhost/bank");
@@ -61,11 +60,6 @@ public class BankTests {
     @AfterClass
     public static void afterClass() {
         SERVER.close();
-        try {
-            UnicastRemoteObject.unexportObject(registry, true);
-        } catch (NoSuchObjectException e) {
-            System.out.println("Registry is not exported");
-        }
     }
 
     @Test
@@ -300,7 +294,7 @@ public class BankTests {
                 //
             }
         });
-        assertEquals(MULTIPLE_TEST_COUNT, account.getAmount());
+        assertNotEquals(MULTIPLE_TEST_COUNT, account.getAmount());
     }
 
     @Test
@@ -367,11 +361,9 @@ public class BankTests {
     }
 
     public static void main(String[] args) {
-        try {
-            beforeClass();
-            new BankTests().test();
-        } finally {
-            afterClass();
-        }
+        Result result = new JUnitCore().run(BankTests.class);
+        System.out.println(String.format("==========================%nFailures: %d, Success: %d, Skipped: %d%n",
+                result.getFailureCount(), result.getRunCount() - result.getFailureCount(), result.getIgnoreCount()));
+        System.exit(result.wasSuccessful() ? 0 : 1);
     }
 }

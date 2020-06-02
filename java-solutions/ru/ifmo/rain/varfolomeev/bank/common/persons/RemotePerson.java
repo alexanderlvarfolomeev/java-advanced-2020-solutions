@@ -1,9 +1,9 @@
-package ru.ifmo.rain.varfolomeev.bank;
+package ru.ifmo.rain.varfolomeev.bank.common.persons;
 
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RemotePerson extends AbstractPerson {
-    RemotePerson(String firstName, String lastName, String passportId) {
+    public RemotePerson(String firstName, String lastName, String passportId) {
         super(lastName, firstName, passportId, new ConcurrentHashMap<>());
     }
 }

@@ -1,4 +1,11 @@
-package ru.ifmo.rain.varfolomeev.bank;
+package ru.ifmo.rain.varfolomeev.bank.common;
+
+import ru.ifmo.rain.varfolomeev.bank.common.accounts.Account;
+import ru.ifmo.rain.varfolomeev.bank.common.accounts.LocalAccount;
+import ru.ifmo.rain.varfolomeev.bank.common.accounts.RemoteAccount;
+import ru.ifmo.rain.varfolomeev.bank.common.persons.LocalPerson;
+import ru.ifmo.rain.varfolomeev.bank.common.persons.Person;
+import ru.ifmo.rain.varfolomeev.bank.common.persons.RemotePerson;
 
 import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
@@ -9,7 +16,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-class RemoteBank implements Bank {
+public class RemoteBank implements Bank {
     private final int port;
     private final Map<String, Person> persons;
 
