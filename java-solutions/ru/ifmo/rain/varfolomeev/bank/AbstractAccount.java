@@ -2,7 +2,6 @@ package ru.ifmo.rain.varfolomeev.bank;
 
 import java.io.Serializable;
 import java.rmi.Remote;
-import java.rmi.RemoteException;
 
 abstract class AbstractAccount implements Account, Remote, Serializable {
     private final String id;
@@ -25,7 +24,7 @@ abstract class AbstractAccount implements Account, Remote, Serializable {
         this.amount = amount;
     }
 
-    public synchronized void addAmount(int amount) throws RemoteException {
+    public synchronized void addAmount(int amount) {
         setAmount(getAmount() + amount);
     }
 }

@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
@@ -235,13 +236,13 @@ public class BankTests {
 
     }
 
-    private void runOperationParallel(IntFunction<Runnable> operation) {
+    private void runOperationParallel(IntConsumer operation) {
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         try {
             Phaser phaser = new Phaser(MULTIPLE_TEST_COUNT);
             IntStream.range(0, MULTIPLE_TEST_COUNT).forEach(i -> executorService.submit(() -> {
                 try {
-                    operation.apply(i).run();
+                    operation.accept(i);
                 } finally {
                     phaser.arrive();
                 }
@@ -255,7 +256,7 @@ public class BankTests {
     @Test
     public void test09_checkParallelPersonRegistration() {
         String passportId = "test09";
-        runOperationParallel(i -> () -> {
+        runOperationParallel(i -> {
             try {
                 bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId + i);
             } catch (RemoteException ignored) {
@@ -276,7 +277,7 @@ public class BankTests {
         String passportId = "test10";
         bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId);
         Person person = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
-        runOperationParallel(i -> () -> {
+        runOperationParallel(i-> {
             try {
                 bank.createAccount(passportId + ":" + i);
             } catch (RemoteException ignored) {
@@ -292,7 +293,7 @@ public class BankTests {
         bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId);
         Person person = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
         Account account = bank.createAccount(passportId + ":1");
-        runOperationParallel(i -> () -> {
+        runOperationParallel(i -> {
             try {
                 account.addAmount(1);
             } catch (RemoteException ignored) {
