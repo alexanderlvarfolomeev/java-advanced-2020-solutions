@@ -294,7 +294,7 @@ public class BankTests {
                 //
             }
         });
-        assertNotEquals(MULTIPLE_TEST_COUNT, account.getAmount());
+        assertEquals(MULTIPLE_TEST_COUNT, account.getAmount());
     }
 
     @Test
