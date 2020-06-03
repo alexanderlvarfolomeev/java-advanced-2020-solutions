@@ -10,7 +10,6 @@ public interface Account extends Remote {
      */
     String getId() throws RemoteException;
 
-
     /**
      * Gets money amount on this account
      * @return money amount
