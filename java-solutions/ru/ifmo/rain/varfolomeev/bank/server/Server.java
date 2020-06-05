@@ -7,27 +7,18 @@ import java.rmi.Naming;
 import java.rmi.NoSuchObjectException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 public class Server {
     private final static int DEFAULT_PORT = 8888;
     private Bank bank;
-    private Registry registry;
 
     public void start() {
-        try {
-            registry = LocateRegistry.createRegistry(1099);
-        } catch (RemoteException e) {
-            System.out.print("Unable to create registry: " + e.getMessage());
-            return;
-        }
         if (bank != null) {
             throw new IllegalStateException("Bank is already bound");
         }
         bank = new RemoteBank(DEFAULT_PORT);
-        System.out.print("Starting Server: ");
+        System.out.println("Starting Server.");
         try {
             UnicastRemoteObject.exportObject(bank, DEFAULT_PORT);
             Naming.rebind("//localhost/bank", bank);
@@ -44,7 +35,7 @@ public class Server {
     }
 
     public void close() {
-        System.out.print("Closing Server.");
+        System.out.println("Closing Server.");
         try {
             bank.close();
         } catch (RemoteException ignored) {
@@ -63,11 +54,6 @@ public class Server {
             UnicastRemoteObject.unexportObject(bank, true);
         } catch (NoSuchObjectException e) {
             System.out.println("Bank is not bound");
-        }
-        try {
-            UnicastRemoteObject.unexportObject(registry, true);
-        } catch (NoSuchObjectException e) {
-            System.out.println("Registry is not exported");
         }
     }
 

@@ -19,6 +19,7 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,6 +42,12 @@ public class BankTests {
 
     @BeforeClass
     public static void beforeClass() {
+        try {
+                LocateRegistry.createRegistry(1099);
+        } catch (RemoteException e) {
+            System.out.println("Unable to create registry: " + e.getMessage());
+        }
+
         SERVER.start();
         try {
             bank = (Bank) Naming.lookup("//localhost/bank");
