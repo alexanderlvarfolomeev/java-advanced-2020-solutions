@@ -89,7 +89,7 @@ public class BankTests {
         String passportId = "test02";
         bank.registerPerson(PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId);
 
-        bank.createAccount("test02:1");
+        bank.createAccount(passportId + ":1");
 
         Person remotePerson = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
         Person localPerson = bank.getPersonByPassportId(passportId, Bank.PersonType.LOCAL);
@@ -105,35 +105,36 @@ public class BankTests {
 
     @Test
     public void test03_testClient() throws RemoteException {
-        assertNull(bank.getPersonByPassportId("test03", Bank.PersonType.REMOTE));
-        runClient(1, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "1", "100"});
-        Person person = bank.getPersonByPassportId("test03", Bank.PersonType.REMOTE);
+        String passportId = "test03";
+        assertNull(bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE));
+        runClient(1, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId, "1", "100"});
+        Person person = bank.getPersonByPassportId(passportId, Bank.PersonType.REMOTE);
         assertNotNull(person);
         assertEquals(PERSON_FIRST_NAME, person.getFirstName());
         assertEquals(PERSON_LAST_NAME, person.getLastName());
-        assertEquals("test03", person.getPassportId());
-        assertNotNull(bank.getAccount("test03:1"));
-        assertEquals(100, bank.getAccount("test03:1").getAmount());
+        assertEquals(passportId, person.getPassportId());
+        assertNotNull(bank.getAccount(passportId + ":1"));
+        assertEquals(100, bank.getAccount(passportId + ":1").getAmount());
 
-        runClient(2, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "1", Integer.toString(Integer.MIN_VALUE)});
-        assertEquals(-2147483548, bank.getAccount("test03:1").getAmount());
-        runClient(3, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "1", Integer.toString(Integer.MAX_VALUE)});
-        assertEquals(99, bank.getAccount("test03:1").getAmount());
+        runClient(2, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId, "1", Integer.toString(Integer.MIN_VALUE)});
+        assertEquals(-2147483548, bank.getAccount(passportId + ":1").getAmount());
+        runClient(3, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId, "1", Integer.toString(Integer.MAX_VALUE)});
+        assertEquals(99, bank.getAccount(passportId + ":1").getAmount());
 
-        assertNull(bank.getAccount("test03:2"));
-        runClient(4, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "2", Integer.toString(Integer.MAX_VALUE)});
-        assertNotNull(bank.getAccount("test03:2"));
-        assertEquals(Integer.MAX_VALUE, bank.getAccount("test03:2").getAmount());
+        assertNull(bank.getAccount(passportId + ":2"));
+        runClient(4, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId, "2", Integer.toString(Integer.MAX_VALUE)});
+        assertNotNull(bank.getAccount(passportId + ":2"));
+        assertEquals(Integer.MAX_VALUE, bank.getAccount(passportId + ":2").getAmount());
 
-        assertNull(bank.getAccount("test03:3"));
-        runClient(5, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "3", Integer.toString(Integer.MIN_VALUE)});
-        assertNotNull(bank.getAccount("test03:3"));
-        assertEquals(Integer.MIN_VALUE, bank.getAccount("test03:3").getAmount());
+        assertNull(bank.getAccount(passportId + ":3"));
+        runClient(5, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId, "3", Integer.toString(Integer.MIN_VALUE)});
+        assertNotNull(bank.getAccount(passportId + ":3"));
+        assertEquals(Integer.MIN_VALUE, bank.getAccount(passportId + ":3").getAmount());
 
-        assertNull(bank.getAccount("test03:4"));
-        runClient(6, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, "test03", "4", Integer.toString(0)});
-        assertNotNull(bank.getAccount("test03:4"));
-        assertEquals(0, bank.getAccount("test03:4").getAmount());
+        assertNull(bank.getAccount(passportId + ":4"));
+        runClient(6, new String[]{PERSON_FIRST_NAME, PERSON_LAST_NAME, passportId, "4", Integer.toString(0)});
+        assertNotNull(bank.getAccount(passportId + ":4"));
+        assertEquals(0, bank.getAccount(passportId + ":4").getAmount());
     }
 
     @Test
