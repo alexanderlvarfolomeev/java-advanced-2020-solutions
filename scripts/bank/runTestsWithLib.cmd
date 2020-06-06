@@ -6,4 +6,4 @@ java  -cp _build;%lib_folder%\* org.junit.runner.JUnitCore ru.ifmo.rain.varfolom
 
 start %script_folder%delete_build.cmd
 
-rem exit %errorlevel%
+exit %errorlevel%
