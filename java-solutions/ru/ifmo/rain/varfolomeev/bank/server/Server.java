@@ -2,6 +2,7 @@ package ru.ifmo.rain.varfolomeev.bank.server;
 
 import ru.ifmo.rain.varfolomeev.bank.common.Bank;
 
+import java.io.Closeable;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NoSuchObjectException;
@@ -9,7 +10,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
-public class Server {
+public class Server implements Closeable {
     private final static int DEFAULT_PORT = 8888;
     private Bank bank;
 
