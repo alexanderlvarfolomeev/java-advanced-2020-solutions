@@ -25,7 +25,7 @@ public class Server implements Closeable {
             Naming.rebind("//localhost/bank", bank);
             System.out.println("Server started");
         } catch (RemoteException e) {
-            System.out.println("Cannot export object: " + e.getMessage());
+            System.out.println("Cannot export bank: " + e.getMessage());
         } catch (MalformedURLException e) {
             System.out.println("Malformed URL");
         }
@@ -42,6 +42,7 @@ public class Server implements Closeable {
         } catch (RemoteException ignored) {
             //
         }
+
         try {
             Naming.unbind("//localhost/bank");
         } catch (RemoteException e) {
