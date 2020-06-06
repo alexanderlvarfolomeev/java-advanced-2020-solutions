@@ -1,4 +1,4 @@
-package ru.ifmo.rain.varfolomeev.bank;
+package ru.ifmo.rain.varfolomeev.bank.tests;
 
 import org.junit.*;
 import org.junit.runner.JUnitCore;
@@ -350,17 +350,6 @@ public class BankTests {
     public void test16_checkIncorrectAccountGetting() throws NoSuchMethodException {
         testIncorrectParameters(Bank.class.getDeclaredMethod("getAccount", String.class),
                 new Object[][]{{null}, {""}, {"1"}, {"1:"}, {"1:1:1"}, {":"}, {"::"}, {"::::::"}});
-    }
-
-    private void test() {
-        Arrays.stream(BankTests.class.getDeclaredMethods())
-                .filter(m -> m.isAnnotationPresent(Test.class)).forEach(method -> {
-            try {
-                method.invoke(this);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new AssertionError(e);
-            }
-        });
     }
 
     public static void main(String[] args) {
