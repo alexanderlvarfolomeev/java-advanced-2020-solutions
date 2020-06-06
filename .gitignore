@@ -8,6 +8,7 @@ scripts/hello.cmd
 scripts/impler.cmd
 scripts/mapper.cmd
 scripts/student.cmd
+scripts/_build
 modules
 java-solutions/info
 java-solutions/Main.java
