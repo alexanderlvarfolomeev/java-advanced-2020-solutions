@@ -87,11 +87,11 @@ public class Client {
         }
     }
 
-private static class ClientException extends Exception {
-    public ClientException(String message) {
-        super(message);
+    private static class ClientException extends Exception {
+        public ClientException(String message) {
+            super(message);
+        }
     }
-}
 
     public static void main(String[] args) {
         if (args == null || Arrays.stream(args).anyMatch(Objects::isNull)) {
