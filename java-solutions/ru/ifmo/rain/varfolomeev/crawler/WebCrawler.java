@@ -87,7 +87,7 @@ public class WebCrawler implements Crawler {
         private void extractLinks(String url, Document document, int depth) {
             try {
                 if (depth > 0) {
-                    document.extractLinks().parallelStream().filter(passed::add).forEach(link -> addLink(link, depth));
+                    document.extractLinks().stream().filter(passed::add).forEach(link -> addLink(link, depth));
                 }
                 downloaded.add(url);
             } catch (IOException e) {
