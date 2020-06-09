@@ -64,7 +64,7 @@ public class WebCrawler implements Crawler {
         private void addLink(String url, int depth) {
             try {
                 String hostName = URLUtils.getHost(url);
-                HostManager hostManager = hosts.compute(hostName, (k, v) -> v == null ? new HostManager() : v);
+                HostManager hostManager = hosts.computeIfAbsent(hostName, s -> new HostManager());
 
                 phaser.register();
                 hostManager.addTask(() -> {
