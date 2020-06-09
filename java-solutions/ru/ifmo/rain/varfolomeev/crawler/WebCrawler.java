@@ -4,10 +4,7 @@ import info.kgeorgiy.java.advanced.crawler.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class WebCrawler implements Crawler {
@@ -19,6 +16,7 @@ public class WebCrawler implements Crawler {
 
     /**
      * Creates new WebCrawler instance
+     *
      * @param downloader      {@link Downloader} which will be used to download pages
      * @param downloaderCount count of threads to download pages
      * @param extractorCount  count of threads to download pages
@@ -44,13 +42,13 @@ public class WebCrawler implements Crawler {
     }
 
     private class SessionContext {
-        private final Set<String> downloaded;
-        private final ConcurrentMap<String, IOException> errors;
+        private final Queue<String> downloaded;
+        private final Map<String, IOException> errors;
         private final Set<String> passed;
         private final Phaser phaser;
 
         private SessionContext() {
-            downloaded = ConcurrentHashMap.newKeySet();
+            downloaded = new ConcurrentLinkedQueue<>();
             errors = new ConcurrentHashMap<>();
             passed = ConcurrentHashMap.newKeySet();
             phaser = new Phaser(1);
@@ -89,7 +87,7 @@ public class WebCrawler implements Crawler {
         private void extractLinks(String url, Document document, int depth) {
             try {
                 if (depth > 0) {
-                    document.extractLinks().stream().filter(passed::add).forEach(link -> addLink(link, depth));
+                    document.extractLinks().parallelStream().filter(passed::add).forEach(link -> addLink(link, depth));
                 }
                 downloaded.add(url);
             } catch (IOException e) {
@@ -129,6 +127,7 @@ public class WebCrawler implements Crawler {
     /**
      * Runs WebCrawler on the certain url
      * Usage: WebCrawler url [depth [downloads [extractors [perHost]]]]
+     *
      * @param args array of String representations of WebCrawler arguments
      */
     public static void main(String[] args) {
@@ -153,7 +152,7 @@ public class WebCrawler implements Crawler {
                     case 1:
                         String url = args[0];
 
-                        try (Crawler crawler = new ru.ifmo.rain.varfolomeev.crawler.WebCrawler(new CachingDownloader(), downloaders, extractors, perHost)) {
+                        try (Crawler crawler = new WebCrawler(new CachingDownloader(), downloaders, extractors, perHost)) {
                             Result result = crawler.download(url, depth);
                             System.out.println("Successfully downloaded pages:");
                             result.getDownloaded().forEach(System.out::println);
