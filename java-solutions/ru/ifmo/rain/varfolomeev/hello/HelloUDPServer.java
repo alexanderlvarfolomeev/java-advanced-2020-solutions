@@ -1,48 +1,32 @@
 package ru.ifmo.rain.varfolomeev.hello;
 
-import info.kgeorgiy.java.advanced.hello.HelloServer;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.*;
 
-import static ru.ifmo.rain.varfolomeev.hello.HelloUDPUtil.getIntArgument;
+import static ru.ifmo.rain.varfolomeev.hello.HelloUDPUtil.getStringFromPacket;
 
-public class HelloUDPServer implements HelloServer {
+public class HelloUDPServer extends AbstractHelloServer {
     private DatagramSocket datagramSocket = null;
     private ExecutorService executorService = null;
-    private ExecutorService distributionService = null;
-    private boolean started = false;
 
     @Override
-    public synchronized void start(int port, int threadCount) {
-        if (threadCount < 1) {
-            throw new IllegalArgumentException("Thread count must be positive");
-        }
-
-        if (started) {
-            throw new IllegalStateException("The server is already started");
-        }
-
+    public synchronized void startImplementation(int port, int threadCount) {
         try {
             datagramSocket = new DatagramSocket(port);
         } catch (SocketException e) {
             throw new RuntimeException("Can't create DatagramSocket instance", e);
         }
 
-        distributionService = Executors.newSingleThreadExecutor();
         executorService = new ThreadPoolExecutor(threadCount, threadCount, 500, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>(1000), new ThreadPoolExecutor.DiscardPolicy());
-        distributionService.submit(this::runServer);
-        started = true;
     }
 
-    private void runServer() {
+
+    void runServer() {
         while (!datagramSocket.isClosed()) {
             try {
                 DatagramPacket request = new DatagramPacket(new byte[datagramSocket.getReceiveBufferSize()],
@@ -50,7 +34,7 @@ public class HelloUDPServer implements HelloServer {
                 datagramSocket.receive(request);
                 executorService.submit(() -> respond(request));
             } catch (IOException e) {
-                if (started) {
+                if (isStarted()) {
                     System.out.println("Failed to receive packet: " + e.getMessage());
                 }
             }
@@ -58,14 +42,13 @@ public class HelloUDPServer implements HelloServer {
     }
 
     private void respond(DatagramPacket request) {
-        String requestMessage = new String(request.getData(), request.getOffset(), request.getLength(),
-                StandardCharsets.UTF_8);
-        byte[] responseData = ("Hello, " + requestMessage).getBytes(StandardCharsets.UTF_8);
+        String requestMessage = getStringFromPacket(request);
+        byte[] responseData = (PREFIX + requestMessage).getBytes(StandardCharsets.UTF_8);
         DatagramPacket response = new DatagramPacket(responseData, responseData.length, request.getSocketAddress());
         try {
             datagramSocket.send(response);
         } catch (IOException e) {
-            if (started) {
+            if (isStarted()) {
                 System.out.println("Failed to send packet: " + e.getMessage());
             }
         }
@@ -73,10 +56,9 @@ public class HelloUDPServer implements HelloServer {
 
     @Override
     public void close() {
-        distributionService.shutdownNow();
-        executorService.shutdownNow();
         datagramSocket.close();
-        started = false;
+        executorService.shutdownNow();
+        super.close();
     }
 
     /**
@@ -85,15 +67,6 @@ public class HelloUDPServer implements HelloServer {
      * @param args {@link #start(int, int)} arguments
      */
     public static void main(String[] args) {
-        if (args == null || Arrays.stream(args).anyMatch(Objects::isNull)) {
-            System.err.println("Arguments can't be null");
-        } else if (args.length != 2) {
-            System.err.println("Usage: HelloUDPServer port threadCount");
-        } else {
-            try (HelloServer helloServer = new HelloUDPServer()) {
-                helloServer.start(getIntArgument("port", args[0]),
-                        getIntArgument("threadCount", args[1]));
-            }
-        }
+        main(new HelloUDPServer(), args);
     }
 }

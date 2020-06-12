@@ -5,6 +5,7 @@ out
 scripts/concurr.cmd
 scripts/crawler.cmd
 scripts/hello.cmd
+scripts/helloNB.cmd
 scripts/impler.cmd
 scripts/mapper.cmd
 scripts/student.cmd
