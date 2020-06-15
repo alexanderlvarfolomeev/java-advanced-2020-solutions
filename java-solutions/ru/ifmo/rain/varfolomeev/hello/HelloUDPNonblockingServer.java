@@ -29,7 +29,7 @@ public class HelloUDPNonblockingServer extends AbstractHelloServer {
                     .configureBlocking(false)
                     .register(selector, SelectionKey.OP_READ);
         } catch (IOException e) {
-            throw new RuntimeException("Can't create acceptor channel", e);
+            throw new RuntimeException("Can't create reader channel", e);
         }
     }
 
