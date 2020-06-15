@@ -41,10 +41,8 @@ public class HelloUDPNonblockingClient extends AbstractHelloClient {
 
     private void process(ClientContext context) {
         while (!context.isFinished()) {
-            int keyCount;
             try {
-                keyCount = context.getSelector().select(200);
-                if (keyCount == 0) {
+                if (context.getSelector().select(200) == 0) {
                     for (SelectionKey key : context.getSelector().keys()) {
                         if (key.interestOps() == SelectionKey.OP_READ) {
                             key.interestOps(SelectionKey.OP_WRITE);

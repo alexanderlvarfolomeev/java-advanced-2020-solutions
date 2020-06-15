@@ -23,7 +23,11 @@ public class HelloUDPNonblockingServer extends AbstractHelloServer {
             throw new RuntimeException("Can't create new selector", e);
         }
         try {
-            DatagramChannel.open().bind(new InetSocketAddress(port)).configureBlocking(false).register(selector, SelectionKey.OP_READ);
+            DatagramChannel
+                    .open()
+                    .bind(new InetSocketAddress(port))
+                    .configureBlocking(false)
+                    .register(selector, SelectionKey.OP_READ);
         } catch (IOException e) {
             throw new RuntimeException("Can't create acceptor channel", e);
         }
