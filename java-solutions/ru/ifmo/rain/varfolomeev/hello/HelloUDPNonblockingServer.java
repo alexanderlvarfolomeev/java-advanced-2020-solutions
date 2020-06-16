@@ -12,6 +12,7 @@ import static ru.ifmo.rain.varfolomeev.hello.HelloUDPUtil.BUFFER_SIZE;
 
 public class HelloUDPNonblockingServer extends AbstractHelloServer {
     private Selector selector = null;
+    private DatagramChannel channel = null;
     private ByteBuffer buffer = null;
 
     @Override
@@ -23,8 +24,8 @@ public class HelloUDPNonblockingServer extends AbstractHelloServer {
             throw new RuntimeException("Can't create new selector", e);
         }
         try {
-            DatagramChannel
-                    .open()
+            channel = DatagramChannel.open();
+            channel
                     .bind(new InetSocketAddress(port))
                     .configureBlocking(false)
                     .register(selector, SelectionKey.OP_READ);
@@ -77,6 +78,12 @@ public class HelloUDPNonblockingServer extends AbstractHelloServer {
     @Override
     public void close() {
         super.close();
+        try {
+            selector.close();
+            channel.close();
+        } catch (IOException e) {
+            System.out.println("Can't close selector");
+        }
     }
 
     /**

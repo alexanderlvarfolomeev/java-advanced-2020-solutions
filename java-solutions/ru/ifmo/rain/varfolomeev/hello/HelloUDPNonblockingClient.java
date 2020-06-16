@@ -66,6 +66,11 @@ public class HelloUDPNonblockingClient extends AbstractHelloClient {
                 }
             }
         }
+        try {
+            context.getSelector().close();
+        } catch (IOException e) {
+            System.out.println("Can't close selector");
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -103,6 +108,7 @@ public class HelloUDPNonblockingClient extends AbstractHelloClient {
                 if (requestNumber == context.getRequestCount()) {
                     context.countDown();
                     key.cancel();
+                    datagramChannel.close();
                 } else {
                     entry.setValue(requestNumber);
                     key.interestOps(SelectionKey.OP_WRITE);

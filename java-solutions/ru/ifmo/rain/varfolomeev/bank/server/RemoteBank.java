@@ -27,7 +27,7 @@ public class RemoteBank implements Bank {
     }
 
     @Override
-    public Account createAccount(String id) throws RemoteException {
+    public synchronized Account createAccount(String id) throws RemoteException {
         checkNonNull(id);
         Map.Entry<String, String> ids = getPassportAndAccountId(id);
         Person person = getPersonByPassportId(ids.getKey(), PersonType.REMOTE);
@@ -78,7 +78,7 @@ public class RemoteBank implements Bank {
     }
 
     @Override
-    public Person registerPerson(String firstName, String lastName, String passportId) throws RemoteException {
+    public synchronized Person registerPerson(String firstName, String lastName, String passportId) throws RemoteException {
         checkNonNull(firstName, lastName, passportId);
         Person person = new RemotePerson(lastName, firstName, passportId);
         Person previousPerson = persons.putIfAbsent(passportId, person);
