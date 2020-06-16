@@ -80,9 +80,14 @@ public class HelloUDPNonblockingServer extends AbstractHelloServer {
         super.close();
         try {
             selector.close();
-            channel.close();
         } catch (IOException e) {
             System.out.println("Can't close selector");
+        }
+        try {
+            channel.socket().close();
+            channel.close();
+        } catch (IOException e) {
+            System.out.println("Can't close channels");
         }
     }
 

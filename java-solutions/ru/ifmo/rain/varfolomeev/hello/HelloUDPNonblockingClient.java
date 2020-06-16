@@ -108,6 +108,7 @@ public class HelloUDPNonblockingClient extends AbstractHelloClient {
                 if (requestNumber == context.getRequestCount()) {
                     context.countDown();
                     key.cancel();
+                    datagramChannel.socket().close();
                     datagramChannel.close();
                 } else {
                     entry.setValue(requestNumber);
